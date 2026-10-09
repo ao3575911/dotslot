@@ -1,0 +1,67 @@
+
+### f1 policy matrix: value 'shipped to production today' (27 cells) into width-14 slots
+fill is atomic: one overflowing slot aborts the whole file, so each slot is its own file here
+error     marker=-  work/f_.md: error: s: value is 27 cells, slot holds 12 (overflow policy: error)
+error     marker=!  work/f_!.md: error: s: value is 27 cells, slot holds 11 (overflow policy: error)
+error     marker=~  <./s~=shipped to…>|
+error     marker=+  <./s+=shipped to production today>|
+ellipsis  marker=-  <./s=shipped to …>|
+ellipsis  marker=!  work/f_!.md: error: s: value is 27 cells, slot holds 11 (overflow policy: error)
+ellipsis  marker=~  <./s~=shipped to…>|
+ellipsis  marker=+  <./s+=shipped to production today>|
+truncate  marker=-  <./s=shipped to p>|
+truncate  marker=!  work/f_!.md: error: s: value is 27 cells, slot holds 11 (overflow policy: error)
+truncate  marker=~  <./s~=shipped to…>|
+truncate  marker=+  <./s+=shipped to production today>|
+grow      marker=-  <./s=shipped to production today>|
+grow      marker=!  work/f_!.md: error: s: value is 27 cells, slot holds 11 (overflow policy: error)
+grow      marker=~  <./s~=shipped to…>|
+grow      marker=+  <./s+=shipped to production today>|
+
+### f2 block wraps by words; error when it does not fit (a 48-char value fails a 49-cell block: word wrap wastes line ends)
+$ ../bin/slot fill work/f2.md --set notes=First line of notes that wraps across the block.
+work/f2.md: error: notes: block holds 49 cells in 2 lines; 6 cells left over (overflow policy: error)
+[exit 2]
+$ ../bin/slot fill work/f2.md --set notes=First line of notes that wraps across.
+Notes: <./notes=First line of notes   >
+       <./|that wraps across.         >
+[exit 0]
+$ ../bin/slot fill work/f2.md --set notes=First line of notes that wraps across the block and then keeps on going well past the end.
+work/f2.md: error: notes: block holds 49 cells in 2 lines; 42 cells left over (overflow policy: error)
+[exit 2]
+$ ../bin/slot fill work/f2.md --set notes=First line of notes that wraps across the block and then keeps on going well past the end. --overflow ellipsis
+Notes: <./notes=First line of notes   >
+       <./|that wraps across the bloc…>
+[exit 0]
+
+### f0 hand-typed block whose continuation is 1 cell too wide (happened while writing f3)
+$ ../bin/slot check work/f0.py
+work/f0.py:2:2: E: block notes: continuation width 17 != head width 16
+work/f0.py:2:2: E: continuation <./|…> with no named slot directly above at the same column
+[exit 1]
+
+### f3 grow on a comment-embedded block adds lines with the comment prefix (python + html)
+def f():
+    # notes: <./notes+=a long   >
+    #        <./|explanation    >
+    #        <./|that needs     >
+    #        <./|several more   >
+    #        <./|lines than the >
+    #        <./|block has      >
+    return 1
+$ ../.venv/bin/python -m py_compile work/f3.py
+[exit 0]
+<!-- <./notes+=a long   > -->
+<!-- <./|explanation    > -->
+<!-- <./|that needs     > -->
+<!-- <./|several more   > -->
+<!-- <./|lines than the > -->
+<!-- <./|block has      > -->
+
+### f4 CJK into a block: odd cell left as padding
+Notes: <./notes=价格 和 交割 日期 需要>
+       <./|再次 确认 一下 好的        >
+
+### f5 a single word longer than a line is hard-split
+Notes: <./notes=supercalifragilisticex>
+       <./|pialidocious-and-more      >

@@ -1,0 +1,49 @@
+name: release
+# Run from the Actions tab (or `gh workflow run release`) on main after the version-bump PR is merged.
+# CI creates and GPG-signs the tag; the signing key lives only in the RELEASE_GPG_KEY secret.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with: { python-version: "3.13" }
+      - name: Release from main only; tag = pyproject version
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          v=$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
+          grep -q "__version__ = \"$v\"" dotslot/__init__.py
+          echo "TAG=v$v" >> "$GITHUB_ENV"
+      - name: Test
+        run: |
+          git config --global user.name ci; git config --global user.email ci@example.invalid
+          pip install -e ".[test]" build && python -m pytest -q tests
+      - name: Create and push the GPG-signed tag
+        env: { GPG_KEY: "${{ secrets.RELEASE_GPG_KEY }}" }
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then echo "::error::$TAG already exists"; exit 1; fi
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"; mkdir -m 700 "$GNUPGHOME"
+          printf '%s\n' "$GPG_KEY" | gpg --batch --quiet --import
+          fpr=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          git -c user.name=ao3575911 -c user.email=280728713+ao3575911@users.noreply.github.com \
+              -c user.signingkey="$fpr" tag -s "$TAG" -m "$TAG"
+          gpg --import .github/release-signing-key.asc 2>/dev/null; git tag -v "$TAG"
+          git push origin "refs/tags/$TAG"
+          rm -rf "$GNUPGHOME"
+      - name: Build and checksum
+        run: |
+          python -m build
+          cd dist && sha256sum * > ../SHA256SUMS && cd .. && cat SHA256SUMS
+      - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with: { subject-path: "dist/*" }
+      - name: GitHub Release
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          awk -v v="${TAG#v}" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > notes.md
+          gh release create "$TAG" dist/* SHA256SUMS --title "$TAG" --notes-file notes.md --verify-tag

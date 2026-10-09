@@ -1,0 +1,60 @@
+
+### c c.py
+# owner: <./owner=Adam     >
+def f():  # status: <./status~=shipp…>
+    return 1
+
+### c c.sh
+#!/bin/sh
+# owner: <./owner=Adam     >
+echo hi # status: <./status~=shipp…>
+
+### c c.js
+// owner: <./owner=Adam     >
+const x = 1; /* status: <./status~=shipp…> */
+
+### c c.c
+// owner: <./owner=Adam     >
+int x = 1; /* status: <./status~=shipp…> */
+
+### c c.go
+package main
+
+// owner: <./owner=Adam     >
+var x = 1 // status: <./status~=shipp…>
+var longername = 2 // other
+
+### c c.html
+<!-- owner: <./owner=Adam     > -->
+<p>hi</p> <!-- status: <./status~=shipp…> -->
+
+### c c.sql
+-- owner: <./owner=Adam     >
+SELECT 1; -- status: <./status~=shipp…>
+
+### c compile/syntax checks after fill
+$ ../.venv/bin/python -m py_compile work/c.py
+[exit 0]
+$ bash -n work/c.sh
+[exit 0]
+$ node --check work/c.js
+[exit 0]
+$ gcc -fsyntax-only work/c.c
+[exit 0]
+
+### c formatters: black, gofmt (does padding survive? does the > column move?)
+black: unchanged
+4c4
+< var x = 1 // status: <./status~=shipp…>
+---
+> var x = 1          // status: <./status~=shipp…>
+[gofmt diff exit 1]
+$ ../bin/slot scan work/c_fmt.go
+work/c_fmt.go:3:10  @1 owner        inline w=15  x1 cap=9   filled          # 'Adam'
+work/c_fmt.go:4:30  @2 status       inline w=14  x1 cap=6   filled ellipsis # 'shipp…'
+[exit 0]
+
+### c false positive: '#' inside a string counts as a comment marker
+$ ../bin/slot scan work/c_fp.py
+work/c_fp.py:1:20  @1 v            inline w=5   x1 cap=3   empty           # 
+[exit 0]

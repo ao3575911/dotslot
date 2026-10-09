@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Run the in-repo `slot` package without installing it (uses .venv if present, else python3).
+here="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+py="$here/.venv/bin/python"; [ -x "$py" ] || py="${PYTHON:-python3}"
+PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}" exec "$py" -m slot "$@"

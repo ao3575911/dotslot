@@ -1,0 +1,57 @@
+
+### b1 Markdown (markdown-it-py, CommonMark)
+<p>Status: &lt;./status      &gt; done</p>
+<p><code>&lt;./code   &gt;</code> in code</p>
+
+
+### b2 HTML: html.parser sees text, then whitespace collapses on render
+TAG p
+DATA 'Owner: '
+DATA '<'
+DATA './owner      > end'
+
+### b3 shell: a slot in code is an input redirection
+$ bash -n work/b.sh
+work/b.sh: line 1: syntax error near unexpected token `newline'
+work/b.sh: line 1: `echo hello <./name    >'
+[exit 2]
+$ bash b.sh
+b.sh: line 1: syntax error near unexpected token `newline'
+b.sh: line 1: `echo hello <./name    >'
+[exit 2]
+
+### b4 python / JS / C with a slot in code (not comment)
+$ ../.venv/bin/python -m py_compile work/b.py
+  File "work/b.py", line 1
+    x = 1 <./v   > 2
+           ^
+SyntaxError: invalid syntax
+[exit 1]
+$ node --check work/b.js
+/workspace/slot-syntax/experiments/work/b.js:1
+let x = 1 <./v   > 2;
+           ^
+
+SyntaxError: Unexpected token '.'
+    at wrapSafe (node:internal/modules/cjs/loader:1472:18)
+    at checkSyntax (node:internal/main/check_syntax:78:3)
+
+Node.js v20.19.2
+[exit 1]
+$ gcc -fsyntax-only work/b.c
+work/b.c:1:12: error: expected expression before ‘.’ token
+    1 | int x = 1 <./v   > 2;
+      |            ^
+[exit 1]
+
+### b5 in strings (YAML/JSON/Python) the slot is just text
+$ ../.venv/bin/python -c import json;print(json.dumps({'k':'<./owner     >'}))
+{"k": "<./owner     >"}
+[exit 0]
+
+### b6 slot tool in auto mode refuses code-position slots
+$ ../bin/slot scan work/b.sh work/b.py work/b.yaml
+work/b.sh:1:11: W: '<./name    >' is outside a comment in a code file (ignored)
+work/b.py:1:6: W: '<./v   >' is outside a comment in a code file (ignored)
+work/b.yaml:1:8: W: '<./owner     >' is outside a comment in a code file (ignored)
+[exit 0]

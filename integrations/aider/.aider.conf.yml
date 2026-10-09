@@ -1,0 +1,5 @@
+# aider runs the lint command after each edit and asks the model to fix failures
+# (https://aider.chat/docs/usage/lint-test.html)
+lint-cmd: "dotslot check --git-base HEAD"
+auto-lint: true
+read: [integrations/aider/CONVENTIONS.md]

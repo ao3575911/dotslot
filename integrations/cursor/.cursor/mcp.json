@@ -1,0 +1,1 @@
+{ "mcpServers": { "dotslot": { "command": "python", "args": ["-m", "dotslot.mcp", "--root", "."] } } }

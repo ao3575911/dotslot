@@ -1,0 +1,8 @@
+---
+description: Fill-only files with <./…> slots
+globs: ["**/*"]
+alwaysApply: false
+---
+Files containing `<./` slots are fill-only. Change slot interiors only, through the `dotslot_fill` MCP tool or
+`dotslot fill FILE --set name=value -i`. Do not reflow, re-indent or "fix" text outside slots. After editing, run
+`dotslot check FILE --git-base HEAD` and revert anything it reports.

@@ -1,0 +1,35 @@
+
+### e1 capacity left after the name (width 10)
+$ ../bin/slot scan work/e.md
+work/e.md:5:0: W: longername: name leaves -1 cells for a value (width 10)
+work/e.md:1:0  @1 a            inline w=10  x1 cap=8   empty             
+work/e.md:2:0  @2 ab           inline w=10  x1 cap=7   empty             
+work/e.md:3:0  @3 status       inline w=10  x1 cap=3   empty             
+work/e.md:4:0  @4 deadline     inline w=10  x1 cap=1   empty             
+work/e.md:5:0  @5 longername   inline w=10  x1 cap=-1  empty             
+[exit 0]
+
+### e2 a word typed into an empty slot reads as a *name*, not a value
+$ ../bin/slot scan work/e2.md
+work/e2.md:1:6  @1 yes          inline w=6   x1 cap=2   empty             
+[exit 0]
+
+### e3 values containing > < (Adam's '> quote' case), = and |
+$ ../bin/slot fill work/e3.md --set v=> done
+work/e3.md: error: value contains ['>'], which cannot sit inside a slot (use --escape)
+[exit 2]
+$ ../bin/slot fill work/e3.md --set v=> done --escape
+<./v=› done           >
+[exit 0]
+$ ../bin/slot fill work/e3.md --set v=a=b|c
+<./v=a=b|c            >
+[exit 0]
+/dev/stdin:1:0  @1 v            inline w=19  x1 cap=17  filled            'a=b|c'
+
+### e4 same name, two widths
+$ ../bin/slot check work/e4.md
+work/e4.md:1:0: W: name 'who' used with different widths [7, 12]
+[exit 0]
+$ ../bin/slot fill work/e4.md --set who=Adam
+work/e4.md: error: who: value is 4 cells, slot holds 3 (overflow policy: error)
+[exit 2]

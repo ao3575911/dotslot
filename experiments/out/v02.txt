@@ -1,0 +1,61 @@
+
+### v1 (a3) a 10-char date now fits a 10-wide unnamed slot
+$ dotslot fill /workspace/slot-syntax/experiments/work2/v1.md --set @1=2026-10-10
+Date: <./2026-10-10>
+[exit 0]
+
+### v2 (e2) a typed word is a value; names need a ':' header
+$ dotslot scan /workspace/slot-syntax/experiments/work2/v2.md
+/workspace/slot-syntax/experiments/work2/v2.md:1:6: W: '<./yes___>': '_' outside a code span can render as emphasis in Markdown; wrap it in backticks
+/workspace/slot-syntax/experiments/work2/v2.md:1:25: W: '<./owner:____>': '_' outside a code span can render as emphasis in Markdown; wrap it in backticks
+/workspace/slot-syntax/experiments/work2/v2.md:1:6  @1 -            inline w=6   x1 cap=6   filled            'yes'
+/workspace/slot-syntax/experiments/work2/v2.md:1:25  @2 owner        inline w=10  x1 cap=4   empty             
+[exit 0]
+
+### v3 (e3) '>' and friends are escaped, not rewritten
+$ dotslot fill /workspace/slot-syntax/experiments/work2/v3.md --set v=> done, a<b
+<./v:\> done, a\<b___>
+[exit 0]
+-:1:0  @1 v            inline w=18  x1 cap=16  filled            '> done, a<b'
+
+### v4 (e1) a header longer than the slot is now an error
+$ dotslot check /workspace/slot-syntax/experiments/work2/v4.md
+/workspace/slot-syntax/experiments/work2/v4.md:1:0: E: longername: header leaves 0 cells for a value (width 11)
+[exit 1]
+
+### v5 (b) code-position slots are ignored by default; unknown extensions are comment-only
+$ dotslot scan /workspace/slot-syntax/experiments/work2/v5.sh /workspace/slot-syntax/experiments/work2/v5.weird
+/workspace/slot-syntax/experiments/work2/v5.sh:1:11: W: '<./name____>' is outside a comment (ignored; use --mode prose)
+/workspace/slot-syntax/experiments/work2/v5.weird:1:2: W: '<./a:___>' is outside a comment (ignored; use --mode prose)
+/workspace/slot-syntax/experiments/work2/v5.sh:2:8  @1 owner        inline w=12  x1 cap=6   empty           # 
+/workspace/slot-syntax/experiments/work2/v5.weird:1:14  @1 b            inline w=5   x1 cap=3   empty           # 
+[exit 0]
+
+### v6 (c) '#' inside a string no longer counts as a comment
+$ dotslot scan /workspace/slot-syntax/experiments/work2/v6.py
+/workspace/slot-syntax/experiments/work2/v6.py:1:20: W: '<./v:____>' is outside a comment (ignored; use --mode prose)
+/workspace/slot-syntax/experiments/work2/v6.py:2:23  @1 w            inline w=6   x1 cap=4   empty           # 
+[exit 0]
+
+### v7 (d2,d3) '_' padding survives unexpand -a and fmt cannot split a slot
+unexpand -a: unchanged
+Status:
+<./status:_____________>
+ok Notes:
+<./notes:____________________>
+$ dotslot check /workspace/slot-syntax/experiments/work2/v7f.md
+/workspace/slot-syntax/experiments/work2/v7f.md:2:0: W: '<./status:_____________>': '_' outside a code span can render as emphasis in Markdown; wrap it in backticks
+/workspace/slot-syntax/experiments/work2/v7f.md:4:0: W: '<./notes:____________________>': '_' outside a code span can render as emphasis in Markdown; wrap it in backticks
+[exit 0]
+
+### v8 (f0) blocks generated, not hand-aligned
+$ dotslot new notes --width 26 --lines 3 --comment # 
+# <./notes:____________________>
+# <./|_________________________>
+# <./|_________________________>
+[exit 0]
+
+### v9 (f) ellipsis prefers a word boundary
+$ dotslot fill /workspace/slot-syntax/experiments/work2/v9.md --set s=shipped to production today
+<./s~:shipped to…_____>
+[exit 0]

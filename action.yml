@@ -1,0 +1,29 @@
+# GitHub composite action. Usage:
+#   - uses: actions/checkout@v4
+#     with: { fetch-depth: 0 }
+#   - uses: ao3575911/dotslot@v0.2.0
+#     with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
+name: dotslot check
+description: Fail the PR if anything outside <./…> slots changed (fill-safe AI edits).
+branding: { icon: check-square, color: green }
+inputs:
+  files:   { description: Space-separated globs to check, required: true }
+  allow:   { description: Comma list of slots that may change, required: false, default: "" }
+  base:    { description: Base revision, required: false, default: "" }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: python3 -m pip install --quiet "$GITHUB_ACTION_PATH"   # installs this action's own version
+    - shell: bash
+      env: { FILES: "${{ inputs.files }}", ALLOW: "${{ inputs.allow }}",
+             BASE: "${{ inputs.base || github.event.pull_request.base.sha || 'HEAD~1' }}" }
+      run: |
+        shopt -s globstar nullglob
+        git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null || git fetch --quiet --depth=1 origin "$BASE" || true
+        rc=0
+        for f in $FILES; do
+          dotslot check "$f" --git-base "$BASE" ${ALLOW:+--allow "$ALLOW"} --json >> dotslot-report.json || rc=1
+        done
+        { echo '```json'; cat dotslot-report.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        exit $rc
