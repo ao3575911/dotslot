@@ -1,0 +1,38 @@
+
+### d1 strip trailing whitespace (sed 's/[ \t]*$//') + git diff --check
+unchanged: interiors end at '>' so nothing is trailing
+git diff --check: clean
+
+### d2 unexpand -a (spaces->tabs) then scan
+Status: <./status^I    > ok$
+Notes: <./notes^I^I       >$
+       <./|^I^I       >$
+$ ../bin/slot scan work/d_tab.md
+work/d_tab.md:1:8: W: slot-like text '<./status\t    >' is not a valid slot (ignored)
+work/d_tab.md:2:7: W: slot-like text '<./notes\t\t       >' is not a valid slot (ignored)
+work/d_tab.md:3:7: W: slot-like text '<./|\t\t       >' is not a valid slot (ignored)
+[exit 0]
+
+### d3 paragraph reflow: fmt -w 30 splits a slot across lines
+Status: <./status           >
+ok Notes: <./notes
+>
+       <./|
+       >
+$ ../bin/slot check work/d_fmt.md
+work/d_fmt.md:2:10: E: unterminated slot: '<./' without '>' on the same line
+work/d_fmt.md:4:7: E: unterminated slot: '<./' without '>' on the same line
+[exit 1]
+
+### d4 Markdown renderers collapse the padding (width invisible when rendered)
+<p>Status: &lt;./status           &gt; ok
+Notes: &lt;./notes                &gt;
+&lt;./|                    &gt;</p>
+
+
+### d5 counter-test (not supported by the tool): the same slots padded with '_' instead of spaces
+unexpand -a: unchanged
+Status: <./status___________>
+ok Notes:
+<./notes________________>
+(fmt can still move a whole slot to another line, but cannot split it)

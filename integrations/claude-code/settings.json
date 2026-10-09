@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Edit|MultiEdit|Write",
+        "hooks": [ { "type": "command", "command": "integrations/claude-code/dotslot-hook.sh" } ] }
+    ]
+  }
+}

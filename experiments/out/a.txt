@@ -1,0 +1,26 @@
+
+### a1 capacity: width counts every char between <./ and >, name included
+$ ../bin/slot scan work/a.md
+work/a.md:1:7  @1 owner        inline w=10  x1 cap=4   empty             
+work/a.md:1:29  @2 date         inline w=10  x1 cap=5   empty             
+work/a.md:1:51  @3 -            inline w=10  x1 cap=9   empty             
+[exit 0]
+
+### a2 fill keeps the closing > column (ASCII, CJK, emoji)
+'Owner: <./owner=Adam>  Date: <./date      >  Free: <./          >' cells 65
+'Owner: <./owner=中文>  Date: <./date      >  Free: <./          >' cells 65
+'Owner: <./owner=🚀ok>  Date: <./date      >  Free: <./          >' cells 65
+'Owner: <./owner=👨\u200d👩\u200d👧  >  Date: <./date      >  Free: <./          >' cells 65
+original cells: 65
+
+### a3 10-char date into a 10-wide unnamed slot (the '=' costs one cell)
+$ ../bin/slot fill work/a.md --set @3=2026-10-10
+work/a.md: error: @3: value is 10 cells, slot holds 9 (overflow policy: error)
+[exit 2]
+
+### a4 refill / clear / idempotency
+Owner: <./owner=Adam>  Date: <./date      >  Free: <./          >
+Owner: <./owner=Bo  >  Date: <./date      >  Free: <./          >
+Owner: <./owner     >  Date: <./date      >  Free: <./          >
+clear restores original: yes
+fill twice == fill once: yes

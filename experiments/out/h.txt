@@ -1,0 +1,118 @@
+
+### h1 good agent: fills slots only (patch applied with git apply)
+@@ -1,6 +1,6 @@
+ # Release v0.2
+-Owner:   <./owner:____________>   Date: <./date:__________>
+-Status:  <./status~:__________________________>
++Owner:   <./owner:Adam________>   Date: <./date:2026-10-17>
++Status:  <./status~:ready for tag_______________>
+ Notes:   <./notes:____________________________>
+          <./|_________________________________>
+$ dotslot check release.md --git-base HEAD
+release.md:2: filled owner: '' -> 'Adam'
+release.md:2: filled date: '' -> '2026-10-17'
+release.md:3: filled status: '' -> 'ready for tag'
+release.md: VIOLATION: status: width changed 34 -> 36 (closing > moved)
+release.md: NOT fill-safe (3 slot(s) changed)
+[exit 1]
+
+### h1b the hand-written 'good' patch miscounted padding by 2 cells; repad, then check
+$ dotslot repad release.md --base /tmp/base_release.md -i
+repadded 1 slot(s)
+[exit 0]
+$ dotslot check release.md --git-base HEAD
+release.md:2: filled owner: '' -> 'Adam'
+release.md:2: filled date: '' -> '2026-10-17'
+release.md:3: filled status: '' -> 'ready for tag'
+release.md: fill-safe (3 slot(s) changed)
+[exit 0]
+
+### h2 helpful agent: fills a slot and also 'fixes' the legal line
+$ dotslot check release.md --git-base HEAD
+release.md:2: filled owner: '' -> 'Adam'
+release.md: VIOLATION: text outside slots changed:
+    @@ -6 +6 @@
+    -Do not edit below this line: legal text, version 3.1.
+    +Do not edit below this line: legal text, version 3.2.
+release.md: NOT fill-safe (1 slot(s) changed)
+[exit 1]
+
+### h3 sloppy agent: drops the padding (most common LLM slip), then repad
+$ dotslot check release.md --git-base HEAD
+release.md:2: filled owner: '' -> 'Adam'
+release.md: VIOLATION: owner: width changed 18 -> 10 (closing > moved)
+release.md: NOT fill-safe (1 slot(s) changed)
+[exit 1]
+$ dotslot repad release.md --base /tmp/base_release.md -i
+repadded 1 slot(s)
+[exit 0]
+$ dotslot check release.md --git-base HEAD
+release.md:2: filled owner: '' -> 'Adam'
+release.md: fill-safe (1 slot(s) changed)
+[exit 0]
+
+### h4 agent renames a slot header
+$ dotslot check release.md --git-base HEAD
+release.md: VIOLATION: text outside slots changed:
+    @@ -2 +2 @@
+    -Owner:   ⟦owner⟧   Date: ⟦date⟧
+    +Owner:   ⟦owner⟧   Date: ⟦when⟧
+release.md: VIOLATION: date: header changed 'date:' -> 'when:'
+release.md: NOT fill-safe (0 slot(s) changed)
+[exit 1]
+
+### h5 agent writes a raw '>' inside a value
+$ dotslot check release.md --git-base HEAD
+release.md:3: filled status: '' -> 'a'
+release.md: VIOLATION: text outside slots changed:
+    @@ -3 +3 @@
+    -Status:  ⟦status⟧
+    +Status:  ⟦status⟧ b ready_________________>
+release.md: VIOLATION: status: width changed 34 -> 10 (closing > moved)
+release.md: NOT fill-safe (1 slot(s) changed)
+[exit 1]
+
+### h6 permission scope: only 'status' may change, agent also fills owner
+$ dotslot check release.md --git-base HEAD --allow status
+release.md:2: filled owner: '' -> 'Adam'
+release.md:3: filled status: '' -> 'green'
+release.md: VIOLATION: owner: changed but not in the allowed list
+release.md: NOT fill-safe (2 slot(s) changed)
+[exit 1]
+
+### h7 YAML comment slot + trailing whitespace added elsewhere
+$ dotslot check deploy.yaml --git-base HEAD
+deploy.yaml:2: filled replicas_note: '' -> 'scaled for launch'
+deploy.yaml: VIOLATION: text outside slots changed:
+    @@ -1 +1 @@
+    -service: api
+    +service: api  
+deploy.yaml: NOT fill-safe (1 slot(s) changed)
+[exit 1]
+
+### h8 Claude Code PostToolUse hook on an outside-slot edit (exit 2 feeds stderr back to the agent)
+$ /workspace/slot-syntax/integrations/claude-code/dotslot-hook.sh
+dotslot: this file is fill-only. Revert edits outside <./…> slots or use the dotslot_fill tool.
+release.md: VIOLATION: text outside slots changed:
+    @@ -6 +6 @@
+    -Do not edit below this line: legal text, version 3.1.
+    +Do not edit below this line: legal text, version 9.
+release.md: NOT fill-safe (0 slot(s) changed)
+[exit 2]
+$ bash -c /workspace/slot-syntax/integrations/claude-code/dotslot-hook.sh < /tmp/hookin.json
+[exit 0]
+
+### h9 MCP server over real stdio (initialize, tools/list, dotslot_fill, out-of-root path)
+1 {"protocolVersion": "2025-06-18", "capabilities": {"tools": {}}, "serverInfo": {"name": "dotslot", "version": "0.2.0"}}
+2 tools: ['dotslot_scan', 'dotslot_fill', 'dotslot_check']
+3 ok {"written": true, "changed": [{"slot": "owner", "line": 2, "before": "", "after": "Adam"}, {"slot": "notes", "line": 4, "before": "", "after": "Tag after CI is green; announce on Monday."}], "diff": "--- release.md\n+++ release.md\n@@ -1,6 +1,6 @@\n # Release v0.2\n-Owner:   <./owner:____________>  
+4 isError {"error": "../../etc/passwd: outside the server root"}
+Owner:   <./owner:Adam________>   Date: <./date:__________>
+Status:  <./status~:__________________________>
+Notes:   <./notes:Tag after CI is green;______>
+         <./|announce on Monday.______________>
+$ dotslot check release.md --git-base HEAD
+release.md:2: filled owner: '' -> 'Adam'
+release.md:4: filled notes: '' -> 'Tag after CI is green; announce on Monday.'
+release.md: fill-safe (2 slot(s) changed)
+[exit 0]

@@ -1,0 +1,50 @@
+
+### g1 an empty slot reserves its width, so the wrap is known before filling
+$ ../bin/slot fit work/g.md --preview
+work/g.md:1: slot status col 61..80 (line 80) static  80:ok  100:ok  120:ok
+[exit 0]
+
+### g2 sweep: slot start column vs 80 (18-cell slot: <./ + 14 interior + >; value 'ship today')
+work/g2.md:1: slot s col 60..78 (line 78) static  80:ok  100:ok  120:ok
+work/g2.md:1: slot s col 62..80 (line 80) static  80:ok  100:ok  120:ok
+work/g2.md:1: slot s col 64..82 (line 82) static  80:over  100:ok  120:ok
+    @80: word ">" moves to the next line
+      word │                                                                <./s=ship today
+work/g2.md:1: slot s col 66..84 (line 84) static  80:over  100:ok  120:ok
+    @80: word "today" moves to the next line
+      word │                                                                  <./s=ship
+work/g2.md:1: slot s col 68..86 (line 86) static  80:over  100:ok  120:ok
+    @80: word "today" moves to the next line
+      word │                                                                    <./s=ship
+
+### g3 grow (+) and typing that pushes '>' : the line width now depends on the value
+work/g3.md:1: slot s col 67..77 (line 77) grow  80:ok  100:ok  120:ok
+work/g3.md:1: slot s col 67..81 (line 81) grow  80:over  100:ok  120:ok
+    @80: word "it>" moves to the next line
+      word │yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy <./s+=ship
+           │it>
+work/g3.md:1: slot s col 67..87 (line 87) grow  80:over  100:ok  120:ok
+    @80: word "today>" moves to the next line
+      word │yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy <./s+=ship it
+           │today>
+work/g3.md:1: slot s col 67..90 (line 90) grow  80:over  100:ok  120:ok
+    @80: word "today" moves to the next line
+      word │yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy <./s+=ship it
+           │today 🚀>
+
+### g4 tab before the slot: column depends on tab stop
+$ ../bin/slot fit work/g4.md --targets 16,20 --tab 8
+work/g4.md:1: slot s col 8..18 (line 18) static  16:over  20:ok
+work/g4.md:2: slot s col 8..18 (line 18) static  16:over  20:ok
+work/g4.md:3: slot s col 16..26 (line 26) static  16:over  20:over
+[exit 1]
+
+### g5 emoji sequence inside a slot: wcwidth vs per-codepoint terminals
+$ ../bin/slot fit work/g5.md --set s=👨‍👩‍👧 ok
+work/g5.md:1: slot s col 69..81 (line 81, per-codepoint 85) static  80:over  100:ok  120:ok
+[exit 1]
+
+### g6 check --fit gate
+$ ../bin/slot check work/g.md --fit 80
+work/g.md: ok (1 slots)
+[exit 0]

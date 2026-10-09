@@ -1,0 +1,12 @@
+# pre-commit hook (https://pre-commit.com/#creating-new-hooks). Not published.
+- id: dotslot-check
+  name: dotslot fill-safe check
+  description: Staged files may differ from HEAD only inside <./…> slots, and every slot must be well-formed.
+  entry: dotslot check --git-base HEAD
+  language: python
+  types: [text]
+- id: dotslot-lint
+  name: dotslot lint (well-formed slots, fit at 100 cells)
+  entry: dotslot check --fit 100
+  language: python
+  types: [text]

@@ -1,0 +1,17 @@
+
+### i1 '_' padding in Markdown: two bare slots on a line render as emphasis (markdown-it-py, CommonMark)
+'Fill <./_____> and <./_____> here'
+   -> <p>Fill &lt;./<em><strong><strong>&gt; and &lt;./</strong></strong></em>&gt; here</p>
+'A <./a:_x_> and <./b:_y_>'
+   -> <p>A &lt;./a:<em>x</em>&gt; and &lt;./b:<em>y</em>&gt;</p>
+'Owner: <./owner:Adam________>  Date: <./__________>'
+   -> <p>Owner: &lt;./owner:Adam________&gt;  Date: &lt;./__________&gt;</p>
+'Fill `<./_____>` and `<./_____>` here'
+   -> <p>Fill <code>&lt;./_____&gt;</code> and <code>&lt;./_____&gt;</code> here</p>
+$ dotslot check /workspace/slot-syntax/experiments/work2/i.md
+/workspace/slot-syntax/experiments/work2/i.md:1:5: W: '<./_____>': '_' outside a code span can render as emphasis in Markdown; wrap it in backticks
+/workspace/slot-syntax/experiments/work2/i.md:1:19: W: '<./_____>': '_' outside a code span can render as emphasis in Markdown; wrap it in backticks
+[exit 0]
+$ dotslot new owner --width 12 --md
+`<./owner:______>`
+[exit 0]
