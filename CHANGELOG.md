@@ -4,6 +4,23 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-14
+
+### Added
+- `check --ignore-whitespace`: trailing whitespace changes outside slots are not a violation (h7). Off by default.
+- MCP: every tool call is validated against its input schema; bad types, missing required and unknown properties return JSON-RPC `-32602` with the failing path (e.g. `arguments.values.owner: expected string`).
+- MCP: `allow` argument on `dotslot_fill` and `dotslot_check`, and a server-wide `dotslot-mcp --allow`. A per-call list can only narrow the server list.
+- MCP: `ignore_whitespace` on `dotslot_check`; malformed JSON lines return `-32700` instead of stopping the server.
+- Action: `ignore-whitespace` and `report` inputs, a `report` output, and a readable step summary (verdict, violations, JSON report).
+- `integrations/README.md`: copy-paste setup for Claude Code, Cursor and aider.
+- Tests for the h1–h9 exit gate (git repo, Claude Code hook, MCP over stdio). CI runs the Action on a 100-file change and checks it catches the violation in under 10 s.
+
+### Changed
+- MCP `dotslot_fill` `dry_run` returns `dry_run: true` and an `a/`/`b/` unified diff; a no-op fill does not rewrite the file.
+- Action writes one JSON array for all files (was concatenated arrays), passes on no matched files, and fails with a clear message when the base revision is missing.
+- pre-commit hooks are published: use `rev: v0.3.0` with `dotslot-check` and `dotslot-lint`.
+- CI requires at least 70 passing tests and validates the pre-commit manifest.
+
 ## [0.2.1] - 2026-10-13
 
 ### Added
@@ -40,6 +57,7 @@ First public release.
 - Trailing whitespace counts as a violation (`--ignore-whitespace` planned for v0.3).
 - Not yet on PyPI or npm (PyPI added in 0.2.1).
 
-[Unreleased]: https://github.com/ao3575911/dotslot/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/ao3575911/dotslot/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ao3575911/dotslot/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/ao3575911/dotslot/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ao3575911/dotslot/releases/tag/v0.2.0

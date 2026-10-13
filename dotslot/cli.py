@@ -138,7 +138,7 @@ def cmd_check(a):
         text = read(p)
         b = base_text(a, p)
         if b is not None:
-            r = verify(b, text, p, a.mode, allow); r['file'] = p; reports.append(r)
+            r = verify(b, text, p, a.mode, allow, a.ignore_whitespace); r['file'] = p; reports.append(r)
             if not a.json:
                 for c in r['changed']: print(f"{p}:{c['line']}: filled {c['slot']}: {c['before']!r} -> {c['after']!r}")
                 for x in r['violations']: print(f'{p}: VIOLATION: {x}')
@@ -199,6 +199,8 @@ def main(argv=None):
     c.add_argument('--base', help='fill-safe check: compare against this earlier version of the file')
     c.add_argument('--git-base', help='fill-safe check against a git revision (e.g. HEAD, origin/main)')
     c.add_argument('--allow', help='with --base: only these slots may change')
+    c.add_argument('--ignore-whitespace', action='store_true',
+                   help='with --base: ignore trailing whitespace changes outside slots')
     c.add_argument('--json', action='store_true')
     a = ap.parse_args(argv)
     return dict(scan=cmd_scan, fill=cmd_fill, check=cmd_check, fit=cmd_fit, new=cmd_new, repad=cmd_repad)[a.cmd](a)

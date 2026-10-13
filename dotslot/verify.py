@@ -23,7 +23,7 @@ def _skeleton(text, slots):
         col.append(ln)
     return col
 
-def verify(base, new, path='-', mode='auto', allow=None):
+def verify(base, new, path='-', mode='auto', allow=None, ignore_whitespace=False):
     bs, bi = scan_text(base, path, mode)
     ns, ni = scan_text(new, path, mode)
     v, changed = [], []
@@ -31,6 +31,8 @@ def verify(base, new, path='-', mode='auto', allow=None):
     for sev, l, c, m in ni:
         if sev == 'E': v.append(f'line {l+1}: {m}')
     sb, sn = _skeleton(base, bs), _skeleton(new, ns)
+    if ignore_whitespace:   # trailing whitespace outside slots is not a violation (h7)
+        sb, sn = [x.rstrip() for x in sb], [x.rstrip() for x in sn]
     if sb != sn:
         d = [x for x in difflib.unified_diff(sb, sn, 'base', 'new', lineterm='', n=0)][2:]
         v.append('text outside slots changed:\n    ' + '\n    '.join(d[:12]))

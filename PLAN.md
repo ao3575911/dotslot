@@ -24,8 +24,8 @@
 **Still open:**
 - gofmt moves the `>` column, so `fit` results computed before it go stale. Fix: run dotslot after formatters in pre-commit.
 - Multi-line strings can fool the comment finder. v1.0 will use tree-sitter.
-- Trailing whitespace counts as a violation (h7). v0.3 adds `--ignore-whitespace`.
-- When a raw `>` closes a slot early, the diagnostic is indirect (h5). v0.3 adds a dedicated hint.
+- ~~Trailing whitespace counts as a violation (h7).~~ Done in v0.3.0: `check --ignore-whitespace`.
+- ~~When a raw `>` closes a slot early, the diagnostic is indirect (h5).~~ Done in v0.2.1: dedicated hint.
 
 ## 3. Flagship: fill-safe AI edits
 Agents are good at filling templates and bad at leaving the rest alone. dotslot turns that into a rule a machine can check: **a fill-only file may change only inside its slots.**
@@ -43,7 +43,7 @@ Agents are good at filling templates and bad at leaving the rest alone. dotslot 
 | Trailing whitespace added elsewhere | caught (h7) |
 
 - **Hand-edited fills slip.** My own hand-written "good" patch miscounted the padding by 2 cells (h1), so the main path is tool-mediated filling, with `check` as the gate.
-- **MCP server (built, v0.3 hardening):** `python -m dotslot.mcp --root .` exposes `dotslot_scan`, `dotslot_fill` and `dotslot_check`.
+- **MCP server (hardened in v0.3.0: schema validation, `dry_run` diffs, `--allow` per call):** `python -m dotslot.mcp --root .` exposes `dotslot_scan`, `dotslot_fill` and `dotslot_check`.
   - `dotslot_fill` verifies its own result before writing.
   - Paths are confined to the root.
   - Tested over real stdio (h9).
@@ -70,7 +70,7 @@ Agents are good at filling templates and bad at leaving the rest alone. dotslot 
    - warn when a value overflows or the line crosses 80/100/120
    - "Fill slot" command
    - mark text outside slots as read-only in fill-only files (stretch)
-4. **pre-commit hook and GitHub Action** (files exist now).
+4. **pre-commit hook and GitHub Action** (published with v0.3.0).
 5. **MCP server** (exists now): shipped inside the Python package as `dotslot-mcp`.
 6. **Paid layer: none at launch.** I'll revisit once more than 50 repos use the Action. The candidate is a hosted *AI edit audit*: a GitHub App that stores each check's JSON report (who or which agent, slot, before and after), with per-path allow-list policies across repos. It builds on what `check --json --allow` already emits (h6). I won't build it on spec.
 

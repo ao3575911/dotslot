@@ -11,15 +11,17 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with: { python-version: "3.13" }
       - run: pip install -e ".[test]"
-      - name: pytest (expects at least 42)
+      - name: pytest (expects at least 70)
         run: |
           git config --global user.name ci; git config --global user.email ci@example.invalid
           python -m pytest -q tests | tee pytest.log
-          n=$(grep -oE '^[0-9]+ passed' pytest.log | grep -oE '^[0-9]+' || echo 0); [ "$n" -ge 42 ] || { echo "::error::expected at least 42 passed, got $n"; exit 1; }
+          n=$(grep -oE '^[0-9]+ passed' pytest.log | grep -oE '^[0-9]+' || echo 0); [ "$n" -ge 70 ] || { echo "::error::expected at least 70 passed, got $n"; exit 1; }
       - name: installed CLI and MCP entry points
         run: |
           dotslot --help >/dev/null
           printf '{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n' | dotslot-mcp --root . | grep -q dotslot_check
+      - name: pre-commit manifest is valid
+        run: pip install --quiet pre-commit && pre-commit validate-manifest .pre-commit-hooks.yaml
   action:
     runs-on: ubuntu-latest
     steps:
@@ -33,3 +35,22 @@ jobs:
           python3 -m pip install --quiet .; dotslot fill ci-sample.md --set owner=ci -i
       - uses: ./
         with: { files: "ci-sample.md", base: "HEAD" }
+      - name: 100-file PR (one filled, one violation) for the negative and timing cases
+        run: |
+          mkdir -p ci-many; for i in $(seq 1 100); do printf 'Owner: `<./owner:____________>`\nkeep %s\n' $i > ci-many/f$i.md; done
+          git add ci-many; git commit -qm many
+          dotslot fill ci-many/f1.md --set owner=ci -i; sed -i 's/keep 2/kept 2/' ci-many/f2.md
+          echo "start=$(date +%s%N)" >> "$GITHUB_ENV"
+      - id: many
+        uses: ./
+        continue-on-error: true
+        with: { files: "ci-many/*.md", base: "HEAD", report: "many.json" }
+      - name: violation caught, report valid, under 10 s
+        run: |
+          ms=$(( ($(date +%s%N) - start) / 1000000 )); echo "action took ${ms} ms"
+          [ "${{ steps.many.outcome }}" = failure ] || { echo "::error::violation not caught"; exit 1; }
+          python3 -c "import json; r=json.load(open('many.json')); assert len(r)==100; bad=[x['file'] for x in r if not x['ok']]; assert bad==['ci-many/f2.md'], bad"
+          [ "$ms" -lt 10000 ] || { echo "::error::action took ${ms} ms"; exit 1; }
+      - uses: ./
+        with: { files: "no-such-dir/*.md", base: "HEAD", report: "empty.json" }
+      - run: test "$(cat empty.json)" = "[]"

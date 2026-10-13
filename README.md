@@ -12,7 +12,7 @@ release.md: fill-safe (2 slot(s) changed)
 CLI · pre-commit · GitHub Action · MCP server (Claude Code, Cursor, aider)
 ```
 
-[![ci](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml/badge.svg)](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml) · MIT · v0.2.1 · [Spec](SPEC.md) · [Experiments](EXPERIMENTS.md) · [Changelog](CHANGELOG.md)
+[![ci](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml/badge.svg)](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml) · MIT · v0.3.0 · [Spec](SPEC.md) · [Experiments](EXPERIMENTS.md) · [Changelog](CHANGELOG.md)
 
 ## What it is
 
@@ -38,6 +38,7 @@ dotslot new notes --width 26 --lines 3 --comment '# '   # generate a slot or blo
 dotslot scan FILE                                         # list slots, widths, capacity
 dotslot fill FILE --set name=value -i                     # fill in place, width kept
 dotslot check FILE --git-base HEAD [--allow a,b]          # prove only slots changed
+dotslot check FILE --git-base HEAD --ignore-whitespace    # ...ignoring trailing whitespace outside slots
 dotslot repad FILE --base OLD -i                          # restore padding after a hand edit
 dotslot fit FILE --targets 80,100,120                     # where will lines wrap?
 ```
@@ -48,7 +49,7 @@ Slot forms: `<./______>` (unnamed), `<./owner:____>` (named), `<./status~:____>`
 
 | tool | files | what it does |
 |---|---|---|
-| MCP server | `dotslot-mcp --root .` | `dotslot_scan`, `dotslot_fill`, `dotslot_check` over stdio; fill verifies before writing; paths confined to root |
+| MCP server | `dotslot-mcp --root . [--allow a,b]` | `dotslot_scan`, `dotslot_fill`, `dotslot_check` over stdio; schema-validated arguments; `dry_run` diffs; per-call `allow`; fill verifies before writing; paths confined to root |
 | Claude Code | [`integrations/claude-code/`](integrations/claude-code) | `.mcp.json`, a `PostToolUse` hook that exits 2 on a violation, and a skill |
 | Cursor | [`integrations/cursor/.cursor/`](integrations/cursor/.cursor) | `mcp.json` and a fill-only rule |
 | aider | [`integrations/aider/`](integrations/aider) | `lint-cmd: dotslot check --git-base HEAD` with auto-lint |
@@ -56,12 +57,16 @@ Slot forms: `<./______>` (unnamed), `<./owner:____>` (named), `<./status~:____>`
 | pre-commit | [`.pre-commit-hooks.yaml`](.pre-commit-hooks.yaml) | `dotslot-check`, `dotslot-lint` |
 | GitHub Action | [`action.yml`](action.yml) | checks PR files against the base SHA, writes a JSON report to the step summary |
 
-pre-commit:
+Setup for each agent: [`integrations/README.md`](integrations/README.md).
+
+pre-commit (run dotslot after formatters):
 
 ```yaml
 - repo: https://github.com/ao3575911/dotslot
-  rev: v0.2.1
-  hooks: [{ id: dotslot-check }]
+  rev: v0.3.0
+  hooks:
+    - id: dotslot-check
+    - id: dotslot-lint
 ```
 
 GitHub Action:
@@ -69,19 +74,23 @@ GitHub Action:
 ```yaml
 - uses: actions/checkout@v4
   with: { fetch-depth: 0 }
-- uses: ao3575911/dotslot@v0.2.1
+- uses: ao3575911/dotslot@v0.3.0
   with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
 ```
 
+Inputs: `files` (required), `allow`, `base` (default: the PR base SHA), `ignore-whitespace`, `report`
+(default `dotslot-report.json`). The step summary lists violations and the JSON report (one array, one entry per
+file). No matched files is a pass; a missing base revision is a failure.
+
 ## Limits
 
-dotslot is a check, not a sandbox. The comment finder is a heuristic until tree-sitter lands; formatters such as gofmt can move columns, so run dotslot after them; trailing whitespace counts as a change. See [CHANGELOG.md](CHANGELOG.md) for open items and [PLAN.md](PLAN.md) for the roadmap.
+dotslot is a check, not a sandbox. The comment finder is a heuristic until tree-sitter lands; formatters such as gofmt can move columns, so run dotslot after them; trailing whitespace counts as a change unless you pass `--ignore-whitespace`. See [CHANGELOG.md](CHANGELOG.md) for open items and [PLAN.md](PLAN.md) for the roadmap.
 
 ## Repository layout
 
-- `dotslot/`: the v0.2 package (CLI, MCP server).
+- `dotslot/`: the package (CLI, MCP server).
 - `slot/`, `bin/slot`: the v0.1 reference, kept only so `experiments/run.sh` reproduces findings (a)–(g). Not installed.
-- `tests/`: 45 tests (12 v0.1, 33 v0.2). Run `pip install -e ".[test]" && pytest -q`.
+- `tests/`: 70 tests (12 v0.1, 33 v0.2, 25 v0.3 including the h1–h9 exit gate). Run `pip install -e ".[test]" && pytest -q`.
 - `experiments/`: `run.sh` (a–g) and `run_v02.sh` (v02, h, i), with recorded output in `out/`.
 
 ## Licence

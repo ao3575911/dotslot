@@ -1,29 +1,62 @@
 # GitHub composite action. Usage:
 #   - uses: actions/checkout@v4
 #     with: { fetch-depth: 0 }
-#   - uses: ao3575911/dotslot@v0.2.0
+#   - uses: ao3575911/dotslot@v0.3.0
 #     with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
 name: dotslot check
 description: Fail the PR if anything outside <./…> slots changed (fill-safe AI edits).
 branding: { icon: check-square, color: green }
 inputs:
-  files:   { description: Space-separated globs to check, required: true }
-  allow:   { description: Comma list of slots that may change, required: false, default: "" }
-  base:    { description: Base revision, required: false, default: "" }
+  files:             { description: Space-separated globs to check, required: true }
+  allow:             { description: Comma list of slots that may change, required: false, default: "" }
+  base:              { description: Base revision (default the PR base SHA, else HEAD~1), required: false, default: "" }
+  ignore-whitespace: { description: Ignore trailing whitespace changes outside slots, required: false, default: "false" }
+  report:            { description: Path of the JSON report (one array of per-file results), required: false, default: "dotslot-report.json" }
+outputs:
+  report: { description: Path of the JSON report, value: "${{ steps.check.outputs.report }}" }
 runs:
   using: composite
   steps:
     - shell: bash
       run: python3 -m pip install --quiet "$GITHUB_ACTION_PATH"   # installs this action's own version
-    - shell: bash
-      env: { FILES: "${{ inputs.files }}", ALLOW: "${{ inputs.allow }}",
+    - id: check
+      shell: bash
+      env: { FILES: "${{ inputs.files }}", ALLOW: "${{ inputs.allow }}", IGNORE_WS: "${{ inputs.ignore-whitespace }}",
+             REPORT: "${{ inputs.report }}",
              BASE: "${{ inputs.base || github.event.pull_request.base.sha || 'HEAD~1' }}" }
       run: |
         shopt -s globstar nullglob
-        git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null || git fetch --quiet --depth=1 origin "$BASE" || true
-        rc=0
-        for f in $FILES; do
-          dotslot check "$f" --git-base "$BASE" ${ALLOW:+--allow "$ALLOW"} --json >> dotslot-report.json || rc=1
-        done
-        { echo '```json'; cat dotslot-report.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        echo "report=$REPORT" >> "$GITHUB_OUTPUT"
+        summary() { { echo "### dotslot check"; echo; echo "$1"; } >> "$GITHUB_STEP_SUMMARY"; }
+        if ! git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null; then
+          git fetch --quiet --depth=1 origin "$BASE" 2>/dev/null || true
+        fi
+        if ! git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null; then
+          echo '[]' > "$REPORT"
+          echo "::error::dotslot: base revision '$BASE' not found; use actions/checkout with fetch-depth: 0"
+          summary "Base revision \`$BASE\` not found. Check out with \`fetch-depth: 0\`."; exit 1
+        fi
+        files=(); for g in $FILES; do for f in $g; do [ -f "$f" ] && files+=("$f"); done; done
+        if [ ${#files[@]} -eq 0 ]; then
+          echo '[]' > "$REPORT"; summary "No files matched \`$FILES\`."; exit 0
+        fi
+        args=(--git-base "$BASE" --json)
+        [ -n "$ALLOW" ] && args+=(--allow "$ALLOW")
+        [ "$IGNORE_WS" = "true" ] && args+=(--ignore-whitespace)
+        rc=0; dotslot check "${files[@]}" "${args[@]}" > "$REPORT" || rc=$?
+        python3 - "$REPORT" "$rc" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+        import json, sys
+        path, rc = sys.argv[1], int(sys.argv[2])
+        try: rows = json.load(open(path))
+        except ValueError: rows = None
+        if not isinstance(rows, list):
+            print('### dotslot check\n\nReport was not valid JSON (exit %d).' % rc); sys.exit()
+        bad = [r for r in rows if not r['ok']]
+        print('### dotslot check: %s\n' % ('fill-safe' if rc == 0 else 'NOT fill-safe'))
+        print('%d file(s) compared, %d with violations.\n' % (len(rows), len(bad)))
+        for r in bad:
+            for v in r['violations']: print('- `%s`: %s' % (r['file'], v.split('\n')[0]))
+        print('\n<details><summary>JSON report</summary>\n\n```json\n%s\n```\n</details>' % json.dumps(rows, indent=1, ensure_ascii=False))
+        PY
+        [ "$rc" -eq 0 ] || echo "::error::dotslot: text outside slots changed (see the step summary)"
         exit $rc
