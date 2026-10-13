@@ -1,3 +1,5 @@
+[![M8ven Score](https://m8ven.ai/badge/mcp/ao3575911-dotslot-ia87ds?v=c3035f8aeacd04053e6285ac74d5eccb)](https://m8ven.ai/mcp/ao3575911-dotslot-ia87ds?s=readme)
+
 ```
 dotslot: let agents fill the blanks, and prove they touched nothing else.
 
