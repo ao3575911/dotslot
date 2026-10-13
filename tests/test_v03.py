@@ -157,3 +157,13 @@ def test_protocol_negotiation(srv):
     init = lambda v: srv.handle(dict(jsonrpc='2.0', id=1, method='initialize', params=dict(protocolVersion=v)))['result']['protocolVersion']
     assert init('2025-03-26') == '2025-03-26'
     assert init('1999-01-01') == '2025-06-18'
+
+def test_treesitter_fallback(monkeypatch):
+    from dotslot.core import scan_text
+    src = 's = """\n# <./a:____>\n"""\n'
+    monkeypatch.setenv('DOTSLOT_NO_TREESITTER', '1')
+    assert [x.name for x in scan_text(src, 'a.py')[0]] == ['a']     # heuristic: known false positive
+    monkeypatch.delenv('DOTSLOT_NO_TREESITTER')
+    from dotslot import treesitter
+    if treesitter.available('a.py'):
+        assert scan_text(src, 'a.py')[0] == []

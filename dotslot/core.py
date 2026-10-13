@@ -14,6 +14,7 @@ from __future__ import annotations
 import os, re
 from dataclasses import dataclass, field
 from .width import cells, cut, display_width
+from .treesitter import comment_ranges
 
 SLOT = re.compile(r'<\./((?:\\.|[^<>\\\n])*)>')
 OPEN = re.compile(r'<\./')
@@ -127,10 +128,16 @@ def markers_for(path, mode):
 def scan_text(text: str, path: str = '-', mode: str = 'auto'):
     lines = text.split('\n')
     markers = markers_for(path, mode)
+    ranges = comment_ranges(text, path) if markers is not None else None
     slots, issues = [], []
     for i, ln in enumerate(lines):
         taken = set()
-        cpos = comment_start(ln, markers) if markers else -1
+        if ranges is not None:
+            spans = ranges.get(i, ())
+            in_c = lambda pos, spans=spans: any(a <= pos < b for a, b in spans)
+        else:
+            cpos = comment_start(ln, markers) if markers else -1
+            in_c = lambda pos, cpos=cpos: 0 <= cpos < pos
         for m in SLOT.finditer(ln):
             taken.add(m.start())
             col = display_width(ln[:m.start()])
@@ -139,7 +146,7 @@ def scan_text(text: str, path: str = '-', mode: str = 'auto'):
             p = parse_interior(m.group(1))
             if p is None:
                 issues.append(('W', i, col, f'slot-like text {m.group(0)!r} is not a valid slot (ignored)')); continue
-            if markers is not None and not (0 <= cpos < m.start()):
+            if markers is not None and not in_c(m.start()):
                 issues.append(('W', i, col, f'{m.group(0)!r} is outside a comment (ignored; use --mode prose)')); continue
             s = Slot(i, m.start(), m.end(), col, m.group(1), in_comment=markers is not None, **p)
             if (os.path.splitext(path)[1].lower() in ('.md', '.markdown') and '_' in m.group(1)
@@ -148,7 +155,7 @@ def scan_text(text: str, path: str = '-', mode: str = 'auto'):
             if s.kind == 'cont': s.role = 'cont'
             slots.append(s)
         for m in OPEN.finditer(ln):
-            if m.start() not in taken and (markers is None or 0 <= cpos < m.start()):
+            if m.start() not in taken and (markers is None or in_c(m.start())):
                 issues.append(('E', i, display_width(ln[:m.start()]), "unterminated slot: '<./' without '>' on the same line"))
     by_line = {}
     for s in slots: by_line.setdefault(s.line, []).append(s)

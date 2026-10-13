@@ -1,0 +1,32 @@
+{
+ "id": "ts-py-multiline-string",
+ "description": "A # inside a triple-quoted string is not a comment.",
+ "op": "scan",
+ "path": "a.py",
+ "requires": [
+  "treesitter"
+ ],
+ "input": "s = \"\"\"\n# <./a:____>\n\"\"\"  # <./b:____>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "b",
+    "kind": "named",
+    "policy": null,
+    "line": 3,
+    "col": 7,
+    "width": 6,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": [
+   {
+    "severity": "W",
+    "line": 2
+   }
+  ]
+ }
+}

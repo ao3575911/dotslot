@@ -4,6 +4,15 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.5.0] - unreleased
+
+### Added
+- Optional tree-sitter comment detection: `pip install "dotslot[treesitter]"` (Python, JS, TS/TSX, Go, Rust, C, Java,
+  Bash). A `#` or `//` inside a multi-line string no longer counts as a comment, and slots on inner lines of a
+  `/* … */` block comment count. Other extensions, or a missing grammar, fall back to the line heuristic.
+  `DOTSLOT_NO_TREESITTER=1` forces the heuristic.
+- 4 conformance fixtures marked `requires: ["treesitter"]`; runners without it skip them.
+
 ## [0.4.0] - unreleased
 
 ### Added

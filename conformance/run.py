@@ -4,8 +4,12 @@ import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from dotslot.core import scan_text, fill_text, SlotError  # noqa: E402
 from dotslot.verify import verify  # noqa: E402
+from dotslot import treesitter  # noqa: E402
 
-def evaluate(c):
+CAPS = {'treesitter'} if treesitter.available() else set()
+
+def evaluate(c, strict=False):
+    if strict and not set(c.get('requires', ())) <= CAPS: raise SystemExit(f"{c['id']}: needs {c['requires']}")
     path, mode = c.get('path', '-'), c.get('mode', 'auto')
     if c['op'] == 'scan':
         slots, issues = scan_text(c['input'], path, mode)
@@ -28,14 +32,16 @@ def evaluate(c):
 
 def main(argv):
     d = argv[1] if len(argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixtures')
-    bad = n = 0
+    bad = n = skip = 0
     for f in sorted(os.listdir(d)):
         if not f.endswith('.json'): continue
-        c = json.load(open(os.path.join(d, f), encoding='utf-8')); n += 1
+        c = json.load(open(os.path.join(d, f), encoding='utf-8'))
+        if not set(c.get('requires', ())) <= CAPS: skip += 1; continue
+        n += 1
         got = evaluate(c)
         if got != c['expect']:
             bad += 1; print(f'FAIL {c["id"]}\n  expected {json.dumps(c["expect"], ensure_ascii=False)}\n  got      {json.dumps(got, ensure_ascii=False)}')
-    print(f'{n - bad}/{n} conformance fixtures passed'); return 1 if bad or not n else 0
+    print(f'{n - bad}/{n} conformance fixtures passed' + (f', {skip} skipped (optional capability missing)' if skip else '')); return 1 if bad or not n else 0
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

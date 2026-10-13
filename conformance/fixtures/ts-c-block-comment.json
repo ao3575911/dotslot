@@ -1,0 +1,27 @@
+{
+ "id": "ts-c-block-comment",
+ "description": "A slot on an inner line of a /* */ block comment counts.",
+ "op": "scan",
+ "path": "a.c",
+ "requires": [
+  "treesitter"
+ ],
+ "input": "/*\n * owner: <./owner:______>\n */\nint x;\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "owner",
+    "kind": "named",
+    "policy": null,
+    "line": 2,
+    "col": 10,
+    "width": 12,
+    "capacity": 6,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": []
+ }
+}

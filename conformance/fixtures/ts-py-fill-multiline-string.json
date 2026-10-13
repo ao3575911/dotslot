@@ -1,0 +1,16 @@
+{
+ "id": "ts-py-fill-multiline-string",
+ "description": "Fill ignores the slot inside a string.",
+ "op": "fill",
+ "path": "a.py",
+ "requires": [
+  "treesitter"
+ ],
+ "input": "s = \"\"\"\n# <./a:____>\n\"\"\"  # <./a:____>\n",
+ "values": {
+  "a": "x"
+ },
+ "expect": {
+  "output": "s = \"\"\"\n# <./a:____>\n\"\"\"  # <./a:x___>\n"
+ }
+}

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dotslot"
-version = "0.4.0"
+version = "0.5.0"
 description = "Let agents fill the blanks in a file, and prove they touched nothing else."
 readme = "README.md"
 license = "MIT"
@@ -29,6 +29,10 @@ classifiers = [
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+treesitter = [
+  "tree-sitter>=0.23", "tree-sitter-python", "tree-sitter-javascript", "tree-sitter-typescript",
+  "tree-sitter-go", "tree-sitter-rust", "tree-sitter-c", "tree-sitter-java", "tree-sitter-bash",
+]
 
 [project.scripts]
 dotslot = "dotslot.cli:main"

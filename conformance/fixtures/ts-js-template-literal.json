@@ -1,0 +1,32 @@
+{
+ "id": "ts-js-template-literal",
+ "description": "A // inside a multi-line template literal is not a comment.",
+ "op": "scan",
+ "path": "a.js",
+ "requires": [
+  "treesitter"
+ ],
+ "input": "const s = `\n// <./a:____>\n`; // <./b:____>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "b",
+    "kind": "named",
+    "policy": null,
+    "line": 3,
+    "col": 6,
+    "width": 6,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": [
+   {
+    "severity": "W",
+    "line": 2
+   }
+  ]
+ }
+}

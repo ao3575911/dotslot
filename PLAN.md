@@ -23,7 +23,7 @@
 
 **Still open:**
 - gofmt moves the `>` column, so `fit` results computed before it go stale. Fix: run dotslot after formatters in pre-commit.
-- Multi-line strings can fool the comment finder. v1.0 will use tree-sitter.
+- ~~Multi-line strings can fool the comment finder.~~ Fixed in 0.5.0 with `dotslot[treesitter]` (heuristic remains the fallback).
 - ~~Trailing whitespace counts as a violation (h7).~~ Done in v0.3.0: `check --ignore-whitespace`.
 - ~~When a raw `>` closes a slot early, the diagnostic is indirect (h5).~~ Done in v0.2.1: dedicated hint.
 
@@ -119,7 +119,7 @@ Agents are good at filling templates and bad at leaving the rest alone. dotslot 
   - The syntax looks odd at first. Mitigation: `dotslot new` and the VS Code highlighting.
   - Agents hand-edit slots anyway (h1, h3). Mitigation: MCP fill first, then the hook, then `repad`.
   - Formatters move columns (c). Mitigation: run dotslot last in pre-commit.
-  - The comment finder is a heuristic until tree-sitter lands.
+  - The comment finder is a heuristic without the `treesitter` extra.
   - Rendered Markdown needs backticks (i).
   - Someone may ship a similar "fill-only" mode inside an agent product. Mitigation: dotslot stays a portable, editor-neutral spec.
 - **Out of scope:**

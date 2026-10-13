@@ -53,7 +53,8 @@ pad       = "_" | " "
    extensions MUST accept `# // /* -- ; <!--`.
 3. Markers inside `'…'`, `"…"` and `` `…` `` strings on the same line MUST NOT start a comment. Implementations MAY
    use a parser (e.g. tree-sitter) for more precise detection, but MUST give the same result as the fixtures on
-   single-line cases.
+   single-line cases. Fixtures that need a parser are marked `requires: ["treesitter"]`;
+   runners without that capability skip them.
 4. A slot outside a comment in comments mode MUST be reported as a warning and ignored.
 5. In Markdown files, a slot containing `_` outside a code span SHOULD produce a warning.
 

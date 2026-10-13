@@ -84,7 +84,7 @@ file). No matched files is a pass; a missing base revision is a failure.
 
 ## Limits
 
-dotslot is a check, not a sandbox. The comment finder is a heuristic until tree-sitter lands; formatters such as gofmt can move columns, so run dotslot after them; trailing whitespace counts as a change unless you pass `--ignore-whitespace`. See [CHANGELOG.md](CHANGELOG.md) for open items and [PLAN.md](PLAN.md) for the roadmap.
+dotslot is a check, not a sandbox. The comment finder is a line heuristic unless you install `dotslot[treesitter]`; formatters such as gofmt can move columns, so run dotslot after them; trailing whitespace counts as a change unless you pass `--ignore-whitespace`. See [CHANGELOG.md](CHANGELOG.md) for open items and [PLAN.md](PLAN.md) for the roadmap.
 
 ## Repository layout
 

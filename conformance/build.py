@@ -67,6 +67,11 @@ CASES = [
  ('check-trailing-ws', 'Trailing whitespace counts by default.', dict(op='check', path='a.txt', base='a\n<./s:____>\n', input='a  \n<./s:____>\n')),
  ('check-ignore-ws', 'ignore_whitespace tolerates trailing whitespace.', dict(op='check', path='a.txt', base='a\n<./s:____>\n', input='a  \n<./s:____>\n', ignore_whitespace=True)),
  ('check-block-height', 'Block height change is a violation.', dict(op='check', path='a.txt', base='<./n:____>\n<./|______>\n', input='<./n:____>\n')),
+ # --- parser-based comment detection (fixtures marked requires: treesitter)
+ ('ts-py-multiline-string', 'A # inside a triple-quoted string is not a comment.', dict(op='scan', path='a.py', requires=['treesitter'], input='s = """\n# <./a:____>\n"""  # <./b:____>\n')),
+ ('ts-js-template-literal', 'A // inside a multi-line template literal is not a comment.', dict(op='scan', path='a.js', requires=['treesitter'], input='const s = `\n// <./a:____>\n`; // <./b:____>\n')),
+ ('ts-c-block-comment', 'A slot on an inner line of a /* */ block comment counts.', dict(op='scan', path='a.c', requires=['treesitter'], input='/*\n * owner: <./owner:______>\n */\nint x;\n')),
+ ('ts-py-fill-multiline-string', 'Fill ignores the slot inside a string.', dict(op='fill', path='a.py', requires=['treesitter'], input='s = """\n# <./a:____>\n"""  # <./a:____>\n', values={'a': 'x'})),
 ]
 
 if __name__ == '__main__':
@@ -74,7 +79,7 @@ if __name__ == '__main__':
     for f in os.listdir(d):
         if f.endswith('.json'): os.remove(os.path.join(d, f))
     for cid, desc, case in CASES:
-        case = dict(id=cid, description=desc, **case); case['expect'] = evaluate(case)
+        case = dict(id=cid, description=desc, **case); case['expect'] = evaluate(case, strict=True)
         with open(os.path.join(d, cid + '.json'), 'w', encoding='utf-8') as f:
             json.dump(case, f, ensure_ascii=False, indent=1); f.write('\n')
     print(len(CASES), 'fixtures')
