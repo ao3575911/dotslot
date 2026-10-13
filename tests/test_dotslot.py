@@ -148,3 +148,11 @@ def test_parse_sets_rejects_values_without_a_name_value_separator():
     with pytest.raises(SystemExit, match=r"--set needs name=value, got 'missing'"):
         parse_sets(['missing'])
 
+
+def test_h5_raw_gt_hint():
+    base = 'Status: <./status:______________>\n'
+    new = 'Status: <./status:a > b ready___>\n'
+    r = verify(base, new, 'x.md')
+    assert not r['ok'] and any("raw '>'" in x for x in r['violations'])
+    ok = verify(base, base, 'x.md')
+    assert ok['ok'] and not any('hint' in x for x in ok['violations'])

@@ -1,25 +1,32 @@
 name: release
 # Run from the Actions tab (or `gh workflow run release`) on main after the version-bump PR is merged.
 # CI creates and GPG-signs the tag; the signing key lives only in the RELEASE_GPG_KEY secret.
+# The pypi job runs after the release job, or on its own when a v* tag is pushed.
+# (A tag pushed by the release job's GITHUB_TOKEN does not trigger workflows, hence the `needs` chain.)
 on:
   workflow_dispatch:
+  push:
+    tags: ["v*"]
 permissions:
   contents: write
   id-token: write
   attestations: write
 jobs:
   release:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    outputs: { tag: "${{ steps.ver.outputs.tag }}" }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with: { python-version: "3.13" }
       - name: Release from main only; tag = pyproject version
+        id: ver
         run: |
           test "$GITHUB_REF" = refs/heads/main
           v=$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
           grep -q "__version__ = \"$v\"" dotslot/__init__.py
-          echo "TAG=v$v" >> "$GITHUB_ENV"
+          echo "TAG=v$v" >> "$GITHUB_ENV"; echo "tag=v$v" >> "$GITHUB_OUTPUT"
       - name: Test
         run: |
           git config --global user.name ci; git config --global user.email ci@example.invalid
@@ -47,3 +54,20 @@ jobs:
         run: |
           awk -v v="${TAG#v}" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > notes.md
           gh release create "$TAG" dist/* SHA256SUMS --title "$TAG" --notes-file notes.md --verify-tag
+  pypi:
+    needs: release
+    if: always() && (needs.release.result == 'success' || (github.event_name == 'push' && needs.release.result == 'skipped'))
+    runs-on: ubuntu-latest
+    environment: { name: pypi, url: "https://pypi.org/project/dotslot/" }
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ needs.release.outputs.tag || github.ref }}" }
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with: { python-version: "3.13" }
+      - name: Build sdist and wheel from the tag
+        run: |
+          v=$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
+          test "$(git describe --tags --exact-match)" = "v$v"
+          pip install build && python -m build
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

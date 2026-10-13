@@ -12,7 +12,7 @@ release.md: fill-safe (2 slot(s) changed)
 CLI · pre-commit · GitHub Action · MCP server (Claude Code, Cursor, aider)
 ```
 
-[![ci](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml/badge.svg)](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml) · MIT · v0.2.0 · [Spec](SPEC.md) · [Experiments](EXPERIMENTS.md) · [Changelog](CHANGELOG.md)
+[![ci](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml/badge.svg)](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml) · MIT · v0.2.1 · [Spec](SPEC.md) · [Experiments](EXPERIMENTS.md) · [Changelog](CHANGELOG.md)
 
 ## What it is
 
@@ -22,10 +22,10 @@ A file with slots is **fill-only**. That turns "don't touch the rest" into a rul
 
 ## Install
 
-Not on PyPI yet. Install from GitHub:
+Install from PyPI:
 
 ```bash
-pip install "git+https://github.com/ao3575911/dotslot@v0.2.0"
+pip install dotslot
 dotslot --help
 ```
 
@@ -60,7 +60,7 @@ pre-commit:
 
 ```yaml
 - repo: https://github.com/ao3575911/dotslot
-  rev: v0.2.0
+  rev: v0.2.1
   hooks: [{ id: dotslot-check }]
 ```
 
@@ -69,7 +69,7 @@ GitHub Action:
 ```yaml
 - uses: actions/checkout@v4
   with: { fetch-depth: 0 }
-- uses: ao3575911/dotslot@v0.2.0
+- uses: ao3575911/dotslot@v0.2.1
   with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
 ```
 
@@ -81,7 +81,7 @@ dotslot is a check, not a sandbox. The comment finder is a heuristic until tree-
 
 - `dotslot/`: the v0.2 package (CLI, MCP server).
 - `slot/`, `bin/slot`: the v0.1 reference, kept only so `experiments/run.sh` reproduces findings (a)–(g). Not installed.
-- `tests/`: 42 tests (12 v0.1, 30 v0.2). Run `pip install -e ".[test]" && pytest -q`.
+- `tests/`: 45 tests (12 v0.1, 33 v0.2). Run `pip install -e ".[test]" && pytest -q`.
 - `experiments/`: `run.sh` (a–g) and `run_v02.sh` (v02, h, i), with recorded output in `out/`.
 
 ## Licence
