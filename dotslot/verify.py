@@ -27,6 +27,7 @@ def verify(base, new, path='-', mode='auto', allow=None):
     bs, bi = scan_text(base, path, mode)
     ns, ni = scan_text(new, path, mode)
     v, changed = [], []
+    nlines = new.split('\n')
     for sev, l, c, m in ni:
         if sev == 'E': v.append(f'line {l+1}: {m}')
     sb, sn = _skeleton(base, bs), _skeleton(new, ns)
@@ -43,6 +44,9 @@ def verify(base, new, path='-', mode='auto', allow=None):
         if a.policy != 'grow':
             if a.width != b.width:
                 v.append(f'{key}: width changed {a.width} -> {b.width} (closing > moved)')
+                if b.width < a.width and '>' in nlines[b.line][b.end:]:
+                    v.append(f"{key}: hint: a raw '>' in the value closed the slot early; "
+                             f"escape it as '\\>' or fill with `dotslot fill`, which escapes for you")
             if len(a.conts) != len(b.conts):
                 v.append(f'{key}: block height changed {1+len(a.conts)} -> {1+len(b.conts)}')
         va = a.block_value() if a.conts else (a.value or '')

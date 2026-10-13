@@ -4,6 +4,17 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-13
+
+### Added
+- Published to PyPI: `pip install dotslot`. The release workflow uploads the sdist and wheel through PyPI trusted publishing (`pypi` environment, no API token).
+- `check` now prints a hint when a raw `>` in a value closes a slot early (h5), pointing to `\>` or `dotslot fill`.
+- Offline regression tests for `parse_sets` (#5, thanks @1nfernet).
+
+### Changed
+- CI requires at least 42 passing tests instead of exactly 42 (#6).
+- README: M8ven badge (#7); install from PyPI; test count updated.
+
 ## [0.2.0] - 2026-10-10
 
 First public release.
@@ -27,7 +38,8 @@ First public release.
 - Formatters such as gofmt can move the `>` column; run dotslot after them.
 - Multi-line strings can fool the comment finder (tree-sitter planned for v1.0).
 - Trailing whitespace counts as a violation (`--ignore-whitespace` planned for v0.3).
-- Not yet on PyPI or npm.
+- Not yet on PyPI or npm (PyPI added in 0.2.1).
 
-[Unreleased]: https://github.com/ao3575911/dotslot/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ao3575911/dotslot/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/ao3575911/dotslot/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ao3575911/dotslot/releases/tag/v0.2.0
