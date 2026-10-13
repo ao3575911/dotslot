@@ -1,0 +1,13 @@
+{
+ "id": "fill-block-overflow",
+ "description": "Block overflow is an error by default.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./notes:____>\n<./|__________>\n",
+ "values": {
+  "notes": "the quick brown fox jumps over the lazy dog"
+ },
+ "expect": {
+  "error": true
+ }
+}

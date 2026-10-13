@@ -1,0 +1,13 @@
+{
+ "id": "fill-unnamed-colon",
+ "description": "Unnamed value that looks like a header is escaped.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./____________>\n",
+ "values": {
+  "@1": "key: v"
+ },
+ "expect": {
+  "output": "<./key\\: v_____>\n"
+ }
+}

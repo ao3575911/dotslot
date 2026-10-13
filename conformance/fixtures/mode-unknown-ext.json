@@ -1,0 +1,36 @@
+{
+ "id": "mode-unknown-ext",
+ "description": "Unknown extensions accept every marker.",
+ "op": "scan",
+ "path": "a.zzz",
+ "input": "-- <./a:____>\n; <./b:____>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "a",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 3,
+    "width": 6,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   },
+   {
+    "index": 2,
+    "name": "b",
+    "kind": "named",
+    "policy": null,
+    "line": 2,
+    "col": 2,
+    "width": 6,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": []
+ }
+}

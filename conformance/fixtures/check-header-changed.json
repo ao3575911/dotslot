@@ -1,0 +1,12 @@
+{
+ "id": "check-header-changed",
+ "description": "Header change is a violation.",
+ "op": "check",
+ "path": "a.txt",
+ "base": "<./a:____>\n",
+ "input": "<./b:____>\n",
+ "expect": {
+  "ok": false,
+  "changed": []
+ }
+}

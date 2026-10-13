@@ -1,0 +1,14 @@
+{
+ "id": "check-grow-lines",
+ "description": "Lines added by a + block are tolerated.",
+ "op": "check",
+ "path": "a.py",
+ "base": "# <./notes+:__________>\n# <./|________________>\nx = 1\n",
+ "input": "# <./notes+:the quick_>\n# <./|brown fox jumps_>\n# <./|over the lazy___>\n# <./|dog_____________>\nx = 1\n",
+ "expect": {
+  "ok": true,
+  "changed": [
+   "notes"
+  ]
+ }
+}

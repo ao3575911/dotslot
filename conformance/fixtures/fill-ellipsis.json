@@ -1,0 +1,13 @@
+{
+ "id": "fill-ellipsis",
+ "description": "Ellipsis policy cuts and appends an ellipsis.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./s~:__________>\n",
+ "values": {
+  "s": "hello wonderful world"
+ },
+ "expect": {
+  "output": "<./s~:hello won…>\n"
+ }
+}

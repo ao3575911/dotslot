@@ -1,0 +1,13 @@
+{
+ "id": "fill-refuses-errors",
+ "description": "Fill refuses a file with scan errors.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./s:____> <./>\n",
+ "values": {
+  "s": "a"
+ },
+ "expect": {
+  "error": true
+ }
+}

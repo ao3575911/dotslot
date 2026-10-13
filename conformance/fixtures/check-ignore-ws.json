@@ -1,0 +1,13 @@
+{
+ "id": "check-ignore-ws",
+ "description": "ignore_whitespace tolerates trailing whitespace.",
+ "op": "check",
+ "path": "a.txt",
+ "base": "a\n<./s:____>\n",
+ "input": "a  \n<./s:____>\n",
+ "ignore_whitespace": true,
+ "expect": {
+  "ok": true,
+  "changed": []
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "id": "check-outside-changed",
+ "description": "Text outside a slot changed.",
+ "op": "check",
+ "path": "a.md",
+ "base": "Owner: `<./owner:____________>`\n",
+ "input": "Owner:  `<./owner:alice_______>`\n",
+ "expect": {
+  "ok": false,
+  "changed": [
+   "owner"
+  ]
+ }
+}

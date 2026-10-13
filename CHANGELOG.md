@@ -4,6 +4,12 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.4.0] - unreleased
+
+### Added
+- `SPEC.md` v1.0-rc1: normative (MUST/SHOULD) and frozen for outside review. The old text moved to `docs/SPEC-v0.2.md`.
+- `conformance/`: 56 language-neutral JSON fixtures (scan, fill, check) and a Python runner, run in CI.
+
 ## [0.3.1] - 2026-10-14
 
 ### Fixed

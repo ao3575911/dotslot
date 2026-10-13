@@ -1,0 +1,33 @@
+{
+ "id": "scan-block-width-mismatch",
+ "description": "Continuation width must equal head width.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./notes:__________>\n<./|____>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "notes",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 0,
+    "width": 16,
+    "capacity": 10,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": [
+   {
+    "severity": "E",
+    "line": 2
+   },
+   {
+    "severity": "E",
+    "line": 2
+   }
+  ]
+ }
+}

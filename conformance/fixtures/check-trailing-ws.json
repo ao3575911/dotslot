@@ -1,0 +1,12 @@
+{
+ "id": "check-trailing-ws",
+ "description": "Trailing whitespace counts by default.",
+ "op": "check",
+ "path": "a.txt",
+ "base": "a\n<./s:____>\n",
+ "input": "a  \n<./s:____>\n",
+ "expect": {
+  "ok": false,
+  "changed": []
+ }
+}

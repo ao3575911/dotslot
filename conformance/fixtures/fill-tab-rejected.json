@@ -1,0 +1,13 @@
+{
+ "id": "fill-tab-rejected",
+ "description": "Inline values cannot contain tabs or newlines.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./s:______>\n",
+ "values": {
+  "s": "a\tb"
+ },
+ "expect": {
+  "error": true
+ }
+}

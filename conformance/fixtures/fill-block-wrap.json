@@ -1,0 +1,13 @@
+{
+ "id": "fill-block-wrap",
+ "description": "Block value wraps at word boundaries across lines.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./notes:__________>\n<./|_______________>\n<./|_______________>\n",
+ "values": {
+  "notes": "the quick brown fox jumps over"
+ },
+ "expect": {
+  "output": "<./notes:the quick_>\n<./|brown fox jumps>\n<./|over___________>\n"
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "id": "check-raw-gt",
+ "description": "A raw > closes the slot early.",
+ "op": "check",
+ "path": "a.md",
+ "base": "Owner: `<./owner:____________>`\n",
+ "input": "Owner: `<./owner:a>b_________>`\n",
+ "expect": {
+  "ok": false,
+  "changed": [
+   "owner"
+  ]
+ }
+}

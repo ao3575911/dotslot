@@ -1,0 +1,14 @@
+{
+ "id": "check-width-changed",
+ "description": "Width change is a violation.",
+ "op": "check",
+ "path": "a.md",
+ "base": "Owner: `<./owner:____________>`\n",
+ "input": "Owner: `<./owner:alice>`\n",
+ "expect": {
+  "ok": false,
+  "changed": [
+   "owner"
+  ]
+ }
+}

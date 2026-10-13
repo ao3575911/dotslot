@@ -1,0 +1,12 @@
+{
+ "id": "check-count-changed",
+ "description": "Slot count change is a violation.",
+ "op": "check",
+ "path": "a.txt",
+ "base": "<./a:____>\n",
+ "input": "<./a:____> <./b:____>\n",
+ "expect": {
+  "ok": false,
+  "changed": []
+ }
+}

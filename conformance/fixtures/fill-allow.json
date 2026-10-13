@@ -1,0 +1,16 @@
+{
+ "id": "fill-allow",
+ "description": "Allow list refuses other slots.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./s:______>\n",
+ "values": {
+  "s": "a"
+ },
+ "allow": [
+  "t"
+ ],
+ "expect": {
+  "error": true
+ }
+}

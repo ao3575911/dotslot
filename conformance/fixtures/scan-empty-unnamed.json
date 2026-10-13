@@ -1,0 +1,24 @@
+{
+ "id": "scan-empty-unnamed",
+ "description": "Unnamed empty slot: capacity equals width.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "x <./__________> y\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": null,
+    "kind": "empty",
+    "policy": null,
+    "line": 1,
+    "col": 2,
+    "width": 10,
+    "capacity": 10,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": []
+ }
+}

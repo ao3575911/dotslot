@@ -1,0 +1,13 @@
+{
+ "id": "fill-named",
+ "description": "Fill pads to the original width with the slot pad.",
+ "op": "fill",
+ "path": "a.md",
+ "input": "Owner: `<./owner:____________>`\n",
+ "values": {
+  "owner": "alice"
+ },
+ "expect": {
+  "output": "Owner: `<./owner:alice_______>`\n"
+ }
+}

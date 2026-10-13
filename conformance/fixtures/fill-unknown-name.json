@@ -1,0 +1,13 @@
+{
+ "id": "fill-unknown-name",
+ "description": "Filling a missing name is an error.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./s:______>\n",
+ "values": {
+  "x": "a"
+ },
+ "expect": {
+  "error": true
+ }
+}

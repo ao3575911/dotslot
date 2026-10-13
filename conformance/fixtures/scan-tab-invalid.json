@@ -1,0 +1,16 @@
+{
+ "id": "scan-tab-invalid",
+ "description": "A tab inside a slot makes it invalid (warning, ignored).",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./a\t__>\n",
+ "expect": {
+  "slots": [],
+  "issues": [
+   {
+    "severity": "W",
+    "line": 1
+   }
+  ]
+ }
+}

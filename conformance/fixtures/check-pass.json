@@ -1,0 +1,14 @@
+{
+ "id": "check-pass",
+ "description": "Only slot interiors changed.",
+ "op": "check",
+ "path": "a.md",
+ "base": "Owner: `<./owner:____________>`\n",
+ "input": "Owner: `<./owner:alice_______>`\n",
+ "expect": {
+  "ok": true,
+  "changed": [
+   "owner"
+  ]
+ }
+}

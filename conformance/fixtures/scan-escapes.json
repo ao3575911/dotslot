@@ -1,0 +1,24 @@
+{
+ "id": "scan-escapes",
+ "description": "Escaped value characters; width counts the escaped form.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./v:a\\>b\\_\\\\__>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "v",
+    "kind": "filled",
+    "policy": null,
+    "line": 1,
+    "col": 0,
+    "width": 12,
+    "capacity": 10,
+    "lines": 1,
+    "value": "a>b_\\"
+   }
+  ],
+  "issues": []
+ }
+}

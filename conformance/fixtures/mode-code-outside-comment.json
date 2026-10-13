@@ -1,0 +1,16 @@
+{
+ "id": "mode-code-outside-comment",
+ "description": "In code files slots outside comments are ignored (warning).",
+ "op": "scan",
+ "path": "a.py",
+ "input": "x = \"<./____>\"\n",
+ "expect": {
+  "slots": [],
+  "issues": [
+   {
+    "severity": "W",
+    "line": 1
+   }
+  ]
+ }
+}

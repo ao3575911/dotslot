@@ -1,0 +1,29 @@
+{
+ "id": "mode-marker-in-string",
+ "description": "Comment markers inside strings are skipped.",
+ "op": "scan",
+ "path": "a.py",
+ "input": "s = \"# <./a:____>\"  # <./b:____>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "b",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 22,
+    "width": 6,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": [
+   {
+    "severity": "W",
+    "line": 1
+   }
+  ]
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "id": "scan-orphan-cont",
+ "description": "Continuation without a head is an error.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./|______>\n",
+ "expect": {
+  "slots": [],
+  "issues": [
+   {
+    "severity": "E",
+    "line": 1
+   }
+  ]
+ }
+}

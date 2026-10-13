@@ -1,0 +1,41 @@
+{
+ "id": "scan-name-widths",
+ "description": "Same name with different widths warns.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./a:____> <./a:______>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "a",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 0,
+    "width": 6,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   },
+   {
+    "index": 2,
+    "name": "a",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 11,
+    "width": 8,
+    "capacity": 6,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": [
+   {
+    "severity": "W",
+    "line": 1
+   }
+  ]
+ }
+}

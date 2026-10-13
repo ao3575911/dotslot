@@ -1,0 +1,13 @@
+{
+ "id": "fill-block-grow",
+ "description": "Grow block inserts continuation lines.",
+ "op": "fill",
+ "path": "a.py",
+ "input": "# <./notes+:__________>\n# <./|________________>\nx = 1\n",
+ "values": {
+  "notes": "the quick brown fox jumps over the lazy dog"
+ },
+ "expect": {
+  "output": "# <./notes+:the quick_>\n# <./|brown fox jumps_>\n# <./|over the lazy___>\n# <./|dog_____________>\nx = 1\n"
+ }
+}

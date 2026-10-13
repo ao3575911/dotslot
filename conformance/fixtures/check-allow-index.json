@@ -1,0 +1,17 @@
+{
+ "id": "check-allow-index",
+ "description": "Unnamed slot allowed by @N.",
+ "op": "check",
+ "path": "a.txt",
+ "base": "<./____>\n",
+ "input": "<./x___>\n",
+ "allow": [
+  "@1"
+ ],
+ "expect": {
+  "ok": true,
+  "changed": [
+   "@1"
+  ]
+ }
+}

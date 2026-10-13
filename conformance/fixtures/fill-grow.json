@@ -1,0 +1,13 @@
+{
+ "id": "fill-grow",
+ "description": "Grow policy widens the slot.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./s+:__>\n",
+ "values": {
+  "s": "longer"
+ },
+ "expect": {
+  "output": "<./s+:longer>\n"
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "id": "check-allow-fail",
+ "description": "Changed slot not in allow list fails.",
+ "op": "check",
+ "path": "a.txt",
+ "base": "<./a:____> <./b:____>\n",
+ "input": "<./a:____> <./b:x___>\n",
+ "allow": [
+  "a"
+ ],
+ "expect": {
+  "ok": false,
+  "changed": [
+   "b"
+  ]
+ }
+}

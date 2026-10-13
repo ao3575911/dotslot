@@ -1,0 +1,12 @@
+{
+ "id": "check-block-height",
+ "description": "Block height change is a violation.",
+ "op": "check",
+ "path": "a.txt",
+ "base": "<./n:____>\n<./|______>\n",
+ "input": "<./n:____>\n",
+ "expect": {
+  "ok": false,
+  "changed": []
+ }
+}

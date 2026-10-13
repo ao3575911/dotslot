@@ -1,0 +1,13 @@
+{
+ "id": "fill-escape",
+ "description": "Fill escapes > < \\ and a trailing _.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./v:____________>\n",
+ "values": {
+  "v": "a>b<c\\d_"
+ },
+ "expect": {
+  "output": "<./v:a\\>b\\<c\\\\d\\_>\n"
+ }
+}

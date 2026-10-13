@@ -1,0 +1,13 @@
+{
+ "id": "fill-space-pad",
+ "description": "A space-padded slot keeps space padding.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./name:      >\n",
+ "values": {
+  "name": "bo"
+ },
+ "expect": {
+  "output": "<./name:bo    >\n"
+ }
+}

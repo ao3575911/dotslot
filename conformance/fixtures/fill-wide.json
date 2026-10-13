@@ -1,0 +1,13 @@
+{
+ "id": "fill-wide",
+ "description": "Wide characters are measured in cells.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./n:______>\n",
+ "values": {
+  "n": "日本"
+ },
+ "expect": {
+  "output": "<./n:日本__>\n"
+ }
+}

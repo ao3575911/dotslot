@@ -1,0 +1,60 @@
+{
+ "id": "scan-policies",
+ "description": "Policies ! ~ + before the colon or alone.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./a!:____> <./b~:____> <./c+:_> <./~:______>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "a",
+    "kind": "named",
+    "policy": "error",
+    "line": 1,
+    "col": 0,
+    "width": 7,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   },
+   {
+    "index": 2,
+    "name": "b",
+    "kind": "named",
+    "policy": "ellipsis",
+    "line": 1,
+    "col": 12,
+    "width": 7,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   },
+   {
+    "index": 3,
+    "name": "c",
+    "kind": "named",
+    "policy": "grow",
+    "line": 1,
+    "col": 24,
+    "width": 4,
+    "capacity": 1,
+    "lines": 1,
+    "value": null
+   },
+   {
+    "index": 4,
+    "name": null,
+    "kind": "empty",
+    "policy": "ellipsis",
+    "line": 1,
+    "col": 33,
+    "width": 8,
+    "capacity": 6,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": []
+ }
+}

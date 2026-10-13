@@ -1,0 +1,24 @@
+{
+ "id": "scan-block",
+ "description": "Named head plus continuations at the same column form a block.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./notes:__________>\n<./|_______________>\n<./|_______________>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "notes",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 0,
+    "width": 16,
+    "capacity": 10,
+    "lines": 3,
+    "value": ""
+   }
+  ],
+  "issues": []
+ }
+}

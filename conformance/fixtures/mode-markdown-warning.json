@@ -1,0 +1,29 @@
+{
+ "id": "mode-markdown-warning",
+ "description": "Markdown: '_' outside a code span warns.",
+ "op": "scan",
+ "path": "a.md",
+ "input": "Owner: <./owner:____>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "owner",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 7,
+    "width": 10,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": [
+   {
+    "severity": "W",
+    "line": 1
+   }
+  ]
+ }
+}

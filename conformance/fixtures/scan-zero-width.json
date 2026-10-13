@@ -1,0 +1,16 @@
+{
+ "id": "scan-zero-width",
+ "description": "Zero-width slot is an error.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "x <./> y\n",
+ "expect": {
+  "slots": [],
+  "issues": [
+   {
+    "severity": "E",
+    "line": 1
+   }
+  ]
+ }
+}

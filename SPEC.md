@@ -1,113 +1,96 @@
-# dotslot SPEC (v0.2): `<./____>` fixed-width slots
+# dotslot specification, v1.0-rc1
 
-*§1–6 define the v0.1 base form; the section "v0.2 changes" at the end amends it and wins on any conflict. The v0.2 tool is `dotslot` (`bin/slot` below is the v0.1 reference, kept for the experiment reproductions).*
-
-A slot is a fill-in field written inline in plain text. Its width is fixed by how it is typed, so a line's layout is decided before the slot is filled. Filling rewrites the text between `<./` and `>` and keeps the closing `>` in the same column, and a filled slot can be re-filled or cleared.
+Status: **release candidate**. Frozen for outside review; changes before 1.0 only fix errors found in review.
+The key words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
+The fixtures in `conformance/fixtures/` are normative: where this text and a fixture disagree, report it as a spec bug.
+The historical v0.1/v0.2 text is in `docs/SPEC-v0.2.md`; the `=` header syntax of v0.1 is not part of this spec
+(see `dotslot migrate`).
 
 ## 1. Lexical form
 ```
-slot      = "<./" interior ">"            ; on one line; interior has no < > tab newline
-interior  = empty | named | filled | cont
-empty     = " "+                          ; <./      >
-named     = IDENT [policy] " "*           ; <./status   >
-filled    = [IDENT] [policy] "=" value " "*   ; <./status=done >   <./=42  >
-cont      = "|" value? " "*               ; <./|more text   >   (block continuation)
-policy    = "!" | "~" | "+"               ; error | ellipsis | grow
-IDENT     = [A-Za-z_][A-Za-z0-9_-]*       ; no dots, so `<./input.txt >` is not a slot
+slot      = "<./" interior ">"                  ; one line
+interior  = { "\" any | char - ("<" | ">" | "\" | newline) }
+header    = IDENT [policy] ":" | policy ":"
+IDENT     = [A-Za-z_][A-Za-z0-9_-]*
+policy    = "!" | "~" | "+"                     ; error | ellipsis | grow
+pad       = "_" | " "
 ```
-- **Width W** is the display width of the interior, i.e. everything between `<./` and `>`, the name included. An empty slot's interior is ASCII, so W is its character count. Once a slot is filled, W is the cell count, so CJK and emoji values keep `>` in its column. Cells follow wcwidth ≥ 0.9 grapheme semantics, the model from experiment (g).
-- **Capacity** (cells available for a value):
-  - unnamed: W − 1 (the `=`)
-  - named: W − len(name) − len(policy) − 1
-  - continuation: W − 1 (the `|`)
-- Trailing spaces are padding, so a value cannot end with a space. Inside an interior, a value may contain `=` and `|`. It may not contain `<`, `>`, tab or newline (`--escape` maps `<` `>` to `‹` `›`).
-- Text that looks like a slot but has an invalid interior (`<./input.txt >`, a tab inside) is a **warning and ignored**. A `<./` with no `>` on the same line, or `<./>` (zero width), is an **error**.
+1. A slot MUST be recognised as the shortest match of `<./`, an interior, and `>` on one line. A `\` escapes the next
+   character.
+2. The **padding** is the longest trailing run of unescaped `_` or space. The remainder is the **body**.
+3. If the body starts with `|`, the slot is a **continuation**; the rest of the body is its value.
+4. Otherwise, if the body starts with a `header`, the slot is **named** (when IDENT is present) or an **unnamed slot
+   with a policy**. The rest of the body is the value.
+5. Otherwise the whole body is the value of an **unnamed** slot.
+6. A slot is **empty** when its value is empty, else **filled**.
+7. An interior containing a tab, or whose body and padding are both empty, is **invalid**: implementations MUST
+   report a warning and ignore it.
+8. `<./>` (zero width) and a `<./` with no closing `>` on the line MUST be reported as errors.
+9. Escapes in values are `\\ \< \> \_ \: \|`. Implementations MUST unescape when reporting a value and MUST escape
+   when writing one: `\ < >` always; a leading `|` and a leading `IDENT:`-like prefix in unnamed slots; a trailing pad
+   character.
 
-## 2. Comment-embedded form
-In code files (selected by extension, `--mode auto`, the default), a slot counts only when a comment marker for that language appears earlier on the same line:
+## 2. Width and capacity
+1. **Width W** is the display width in terminal cells of the interior as it appears in the file (escaped form).
+   Cells MUST follow Unicode grapheme clusters with East Asian Wide/Fullwidth and emoji presentation = 2 cells,
+   combining and zero-width characters = 0, and other printable characters = 1 (the `wcwidth` model).
+2. **Capacity** = W − cells(header), where a continuation's header is `|`. A non-`+` slot with capacity < 1 MUST be
+   reported as an error.
+3. When a slot is written, its interior MUST keep width W (except `+`), padded with the slot's own pad character.
+4. The same name used with different widths SHOULD produce a warning.
 
-| marker | extensions |
-|---|---|
-| `#` | py sh bash zsh yaml yml toml rb pl r mk cfg conf |
-| `//` or `/*` | js ts tsx jsx c h cc cpp go rs java kt swift cs css |
-| `--` | sql lua hs elm |
-| `;` | ini el lisp clj scm asm |
-| `<!--` | html htm xml svg vue |
+## 3. Blocks
+1. A named slot followed on the next lines by continuations in the same display column forms a **block**.
+2. Each continuation MUST have the head's width; a mismatch is an error.
+3. A continuation not owned by a block MUST be reported as an error.
+4. A block's value is the non-empty line values joined by single spaces. Fill MUST word-wrap greedily across lines;
+   a word longer than a line MAY be split hard.
 
-Slots in a code position are reported and ignored. `--mode prose` accepts every slot; `--mode code` uses all markers on unknown extensions. The comment test is a line-local heuristic: a `#` inside a string counts as a comment (known false positive, exp. c).
+## 4. Where slots count (modes)
+1. `prose` mode: every slot counts. It is the default for `.md .markdown .txt .text .rst .adoc .org .slot` and stdin.
+2. `comments` mode (every other file): a slot counts only when a comment marker for the language starts earlier on
+   the same line. Markers by extension are listed in the reference implementation (`dotslot/core.py`); unknown
+   extensions MUST accept `# // /* -- ; <!--`.
+3. Markers inside `'…'`, `"…"` and `` `…` `` strings on the same line MUST NOT start a comment. Implementations MAY
+   use a parser (e.g. tree-sitter) for more precise detection, but MUST give the same result as the fixtures on
+   single-line cases.
+4. A slot outside a comment in comments mode MUST be reported as a warning and ignored.
+5. In Markdown files, a slot containing `_` outside a code span SHOULD produce a warning.
 
-## 3. Block slots
-A block is a **named** slot (empty or filled) followed by one or more `<./|…>` lines in the same display column with the same width:
-```
-Notes: <./notes                       >
-       <./|                           >
-```
-- The value is word-wrapped across the lines. The first line holds W − len(name) − 1 cells and each continuation W − 1.
-- A word longer than a line is split hard.
-- A continuation whose column or width does not match its head is an error. So is an orphan continuation with no head.
-- The block's value is the line values joined by single spaces.
+## 5. Addressing
+1. Top-level slots (heads and inline slots, not continuations) are numbered from 1 in scan order; `@N` addresses the
+   N-th. A name addresses every slot with that name.
+2. Filling an unknown name or index MUST be an error.
+3. With an allow list, filling a slot not in it MUST be an error.
 
-## 4. Overflow policies
-Policy precedence: the marker on the slot, then `--overflow`, then `error`.
+## 6. Fill
+1. Fill MUST refuse a file with any scan error.
+2. Fill MUST only change slot interiors, except that a `+` block MAY insert continuation lines after its last line,
+   copying the comment prefix and a closing comment suffix.
+3. Overflow policy precedence: the slot's own marker, then the caller's default, then `error`.
+   - `error`: refuse.
+   - `ellipsis`: cut at a grapheme boundary so the escaped value plus `…` fits; prefer a word boundary when it keeps
+     at least ⅔ of the capacity.
+   - `grow`: the interior grows (inline) or lines are added (block).
+4. Values for inline slots MUST NOT contain a tab or newline. Trailing spaces are dropped.
+5. Fill MUST be idempotent.
 
-| policy | inline slot | block slot |
-|---|---|---|
-| `error` `!` | refuse; exit 2. Fill is atomic per file | refuse when words are left over |
-| `ellipsis` `~` | cut to cap−1 cells, then add `…` | the last line ends in `…` |
-| `truncate` (CLI only) | cut to cap cells | drop the overflow |
-| `grow` `+` | interior expands and `>` moves right (the line width now depends on the value) | append `<./|…>` lines, copying the comment prefix and suffix (`# `, `<!-- … -->`) |
+## 7. Check (fill-safe proof)
+`check(base, new, allow?, ignore_whitespace?)` passes only when all hold:
+1. `new` has no scan errors.
+2. With every slot interior removed, the text is identical, except continuation lines added by a `+` block.
+   With `ignore_whitespace`, trailing whitespace on each line is ignored.
+3. Slot count, headers (name and policy), widths and block heights are unchanged, except for `+` slots.
+4. Every slot whose value changed is in `allow`, when given.
 
-Wide glyphs are never split. A 2-cell glyph that does not fit leaves one padding cell.
+The result MUST list the changed slots by name, or `@N` for unnamed slots.
 
-## 5. Addressing and fill
-- `--set name=value` fills every slot with that name. `--set @N=value` fills the N-th slot in scan order (continuations are not counted).
-- `--clear name|@N` restores the empty form at the same width.
-- `--json-values file.json` reads values from a file.
-- Filling an unknown name is an error.
-- Filling is idempotent: filling twice with the same value gives the same text as filling once.
+## 8. Conformance
+An implementation conforms when it passes every fixture in `conformance/fixtures/`. Each fixture is JSON:
+`{id, description, op: scan|fill|check, path, mode?, input, base?, values?, allow?, ignore_whitespace?, expect}`.
+- `scan` expects `slots` (index, name, kind, policy, 1-based line, 0-based cell col, width, capacity, lines, value)
+  and `issues` (severity `E`/`W`, line; messages are not normative).
+- `fill` expects `output` (exact text) or `error: true`.
+- `check` expects `ok` and `changed`.
 
-## 6. Tool
-```
-bin/slot scan  FILE... [--json] [--mode auto|prose|code]
-bin/slot fill  FILE... --set k=v ... [--overflow P] [--escape] [--clear k] [-i]
-bin/slot check FILE... [--require a,b] [--require-filled] [--fit N] [--strict]
-bin/slot fit   FILE... [--set k=v] [--targets 80,100,120] [--tab 8] [--preview] [--fail-at N]
-```
-- `fit` reuses slotfit's model: wcwidth cells, tabs measured from the absolute column, ANSI = 0.
-- `fit` gives one of four statuses at each target:
-  - `over`: the slot's `>` is past the target.
-  - `pushes`: the slot fits but the rest of the line goes past the target.
-  - `maybe`: only per-codepoint terminals cross the target.
-  - `ok`: fits.
-- A line is `static` unless one of its slots has the `+` policy.
-- `--preview` shows where word wrap breaks the line.
-- Exit codes: 0 ok, 1 lint failures, 2 fill refused.
-
----
-# v0.2 changes (implemented in `dotslot/` since 0.2.0, current through 0.3.x; v0.1 kept in `slot/`)
-- **Padding:** the padding is `_` (written by default) or space (still read). A slot keeps its own pad character when it is filled.
-- **Headers:**
-  - Unnamed slots have no header, so their capacity is W. `<./__________>` holds 10 cells.
-  - Named slots use `name:` (`<./status:____>`). Policies go before the colon (`status~:`) or stand alone (`~:`).
-  - Continuation lines stay `|`.
-- **Escapes in values:** `\\ \< \> \_ \: \|`. The tool writes them; humans rarely need to.
-  - `\:` is needed only when an unnamed value starts like `word:`.
-  - `\_` is needed only for a trailing `_`.
-  - Width counts the escaped form, because that is what sits in the file.
-- **Default mode:** bare slots count only in prose files (`.md .markdown .txt .text .rst .adoc .org .slot` and stdin). Every other file is comment-only, and unknown extensions accept `# // /* -- ; <!--`. Comment markers inside `'…' "…" `…`` strings are skipped. `--mode prose|comments` overrides this.
-- **Errors:** a header that leaves less than 1 cell is an error, unless the policy is `+`.
-- **Ellipsis:** cuts at a word boundary when that keeps at least ⅔ of the capacity.
-- **New commands:**
-  - `dotslot new` generates well-formed slots and blocks.
-  - `dotslot repad --base` restores widths that a hand or agent edit lost.
-  - `dotslot check --base FILE | --git-base REV [--allow a,b] [--json]` is the fill-safe proof. It passes only when:
-    - text outside slots is byte-identical (lines added by `+` blocks are tolerated)
-    - slot count, headers and widths are unchanged (except for `+` slots)
-    - changed slots are within `--allow`
-  - `fill --allow` refuses to fill other slots.
-- **MCP:** `python -m dotslot.mcp --root DIR` runs a stdio JSON-RPC MCP server with three tools:
-  - `dotslot_scan`
-  - `dotslot_fill`, which verifies the result before it writes
-  - `dotslot_check`
-
-  Paths are confined to the server root.
+Runners: `python conformance/run.py`.

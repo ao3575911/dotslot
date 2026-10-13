@@ -1,0 +1,13 @@
+{
+ "id": "fill-crlf-free",
+ "description": "Text outside the slot is untouched.",
+ "op": "fill",
+ "path": "a.py",
+ "input": "a = 1  # <./o:____> tail\nb = 2\n",
+ "values": {
+  "o": "x"
+ },
+ "expect": {
+  "output": "a = 1  # <./o:x___> tail\nb = 2\n"
+ }
+}

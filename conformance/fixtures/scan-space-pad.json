@@ -1,0 +1,24 @@
+{
+ "id": "scan-space-pad",
+ "description": "Space padding is read.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./name:    >\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "name",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 0,
+    "width": 9,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": []
+ }
+}

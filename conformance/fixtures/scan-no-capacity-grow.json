@@ -1,0 +1,24 @@
+{
+ "id": "scan-no-capacity-grow",
+ "description": "Grow slot may start with zero capacity.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./s+:>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "s",
+    "kind": "named",
+    "policy": "grow",
+    "line": 1,
+    "col": 0,
+    "width": 3,
+    "capacity": 0,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": []
+ }
+}

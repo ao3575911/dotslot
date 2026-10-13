@@ -1,0 +1,25 @@
+{
+ "id": "mode-prose-override",
+ "description": "mode=prose counts bare slots in code files.",
+ "op": "scan",
+ "path": "a.py",
+ "mode": "prose",
+ "input": "x = \"<./____>\"\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": null,
+    "kind": "empty",
+    "policy": null,
+    "line": 1,
+    "col": 5,
+    "width": 4,
+    "capacity": 4,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": []
+ }
+}

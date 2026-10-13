@@ -1,0 +1,29 @@
+{
+ "id": "scan-no-capacity",
+ "description": "Header that leaves no cell is an error.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./status:>\n",
+ "expect": {
+  "slots": [
+   {
+    "index": 1,
+    "name": "status",
+    "kind": "named",
+    "policy": null,
+    "line": 1,
+    "col": 0,
+    "width": 7,
+    "capacity": 0,
+    "lines": 1,
+    "value": null
+   }
+  ],
+  "issues": [
+   {
+    "severity": "E",
+    "line": 1
+   }
+  ]
+ }
+}

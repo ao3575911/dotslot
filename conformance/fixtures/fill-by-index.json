@@ -1,0 +1,13 @@
+{
+ "id": "fill-by-index",
+ "description": "Fill by @N index.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./______> <./______>\n",
+ "values": {
+  "@2": "b"
+ },
+ "expect": {
+  "output": "<./______> <./b_____>\n"
+ }
+}

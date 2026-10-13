@@ -16,6 +16,8 @@ jobs:
           git config --global user.name ci; git config --global user.email ci@example.invalid
           python -m pytest -q tests | tee pytest.log
           n=$(grep -oE '^[0-9]+ passed' pytest.log | grep -oE '^[0-9]+' || echo 0); [ "$n" -ge 70 ] || { echo "::error::expected at least 70 passed, got $n"; exit 1; }
+      - name: conformance fixtures
+        run: python conformance/run.py
       - name: installed CLI and MCP entry points
         run: |
           dotslot --help >/dev/null

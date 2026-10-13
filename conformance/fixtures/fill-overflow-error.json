@@ -1,0 +1,13 @@
+{
+ "id": "fill-overflow-error",
+ "description": "Default policy: overflow is an error.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./s:____>\n",
+ "values": {
+  "s": "too long"
+ },
+ "expect": {
+  "error": true
+ }
+}
