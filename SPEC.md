@@ -84,7 +84,7 @@ bin/slot fit   FILE... [--set k=v] [--targets 80,100,120] [--tab 8] [--preview] 
 - Exit codes: 0 ok, 1 lint failures, 2 fill refused.
 
 ---
-# v0.2 changes (implemented in `dotslot/`; v0.1 kept in `slot/`)
+# v0.2 changes (implemented in `dotslot/` since 0.2.0, current through 0.3.x; v0.1 kept in `slot/`)
 - **Padding:** the padding is `_` (written by default) or space (still read). A slot keeps its own pad character when it is filled.
 - **Headers:**
   - Unnamed slots have no header, so their capacity is W. `<./__________>` holds 10 cells.

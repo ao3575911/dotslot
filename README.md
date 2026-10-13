@@ -63,7 +63,7 @@ pre-commit (run dotslot after formatters):
 
 ```yaml
 - repo: https://github.com/ao3575911/dotslot
-  rev: v0.3.0
+  rev: v0.3.1
   hooks:
     - id: dotslot-check
     - id: dotslot-lint
@@ -72,9 +72,9 @@ pre-commit (run dotslot after formatters):
 GitHub Action:
 
 ```yaml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v5
   with: { fetch-depth: 0 }
-- uses: ao3575911/dotslot@v0.3.0
+- uses: ao3575911/dotslot@v0.3.1
   with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
 ```
 

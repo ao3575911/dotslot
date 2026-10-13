@@ -1,7 +1,7 @@
 # GitHub composite action. Usage:
-#   - uses: actions/checkout@v4
+#   - uses: actions/checkout@v5
 #     with: { fetch-depth: 0 }
-#   - uses: ao3575911/dotslot@v0.3.0
+#   - uses: ao3575911/dotslot@v0.3.1
 #     with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
 name: dotslot check
 description: Fail the PR if anything outside <./…> slots changed (fill-safe AI edits).
@@ -18,7 +18,10 @@ runs:
   using: composite
   steps:
     - shell: bash
-      run: python3 -m pip install --quiet "$GITHUB_ACTION_PATH"   # installs this action's own version
+      run: |   # installs this action's own version into a private venv (no system pip)
+        python3 -m venv "$RUNNER_TEMP/dotslot-venv"
+        "$RUNNER_TEMP/dotslot-venv/bin/python" -m pip install --quiet --disable-pip-version-check "$GITHUB_ACTION_PATH"
+        echo "$RUNNER_TEMP/dotslot-venv/bin" >> "$GITHUB_PATH"
     - id: check
       shell: bash
       env: { FILES: "${{ inputs.files }}", ALLOW: "${{ inputs.allow }}", IGNORE_WS: "${{ inputs.ignore-whitespace }}",

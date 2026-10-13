@@ -4,6 +4,21 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-14
+
+### Fixed
+- MCP `dotslot_fill` writes atomically (temp file in the same directory, then `os.replace`); a failed write leaves the original intact.
+- MCP rejects non-object `params` with `-32602` instead of exiting.
+- MCP `initialize` only echoes a supported protocol version (`2025-06-18`, `2025-03-26`, `2024-11-05`); otherwise it answers with the newest.
+- Action installs dotslot into a venv under `$RUNNER_TEMP` instead of the system pip (works on self-hosted runners).
+
+### Added
+- `SECURITY.md`, `CODEOWNERS`, PyPI classifiers and Source/Issues/Documentation links.
+- Tests for symlink and `..` escapes, failed writes, and list `params`.
+
+### Changed
+- README examples use `actions/checkout@v5` and `v0.3.1`; stale PLAN/SPEC lines updated.
+
 ## [0.3.0] - 2026-10-14
 
 ### Added

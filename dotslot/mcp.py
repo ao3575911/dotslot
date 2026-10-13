@@ -3,7 +3,7 @@ Run:  python -m dotslot.mcp --root /path/to/repo [--allow owner,status]
 The only write path is `dotslot_fill`, which changes slot interiors and re-verifies the result.
 Every tool call is validated against the tool's input schema before it runs."""
 from __future__ import annotations
-import argparse, difflib, json, os, sys
+import argparse, tempfile, difflib, json, os, sys
 from .core import scan_text, fill_text, SlotError
 from .verify import verify
 from . import __version__
@@ -49,6 +49,21 @@ def validate(schema, value, where='arguments'):
     if t == 'array' and 'items' in schema:
         for i, v in enumerate(value): validate(schema['items'], v, f'{where}[{i}]')
 
+PROTOCOL_VERSIONS = ('2025-06-18', '2025-03-26', '2024-11-05')   # newest first
+
+def _atomic_write(full, text):
+    """Write to a temp file in the same directory, then os.replace, so a crash never leaves a half-written file."""
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(full), prefix='.dotslot-', suffix='.tmp')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f: f.write(text)
+        try: os.chmod(tmp, os.stat(full).st_mode & 0o7777)
+        except OSError: pass
+        os.replace(tmp, full)
+    except BaseException:
+        try: os.unlink(tmp)
+        except OSError: pass
+        raise
+
 class Server:
     def __init__(self, root, allow=None):
         self.root = os.path.realpath(root)
@@ -73,7 +88,7 @@ class Server:
         r = verify(old, new, path, 'auto', allow)
         if not r['ok']: raise SlotError('refusing to write: ' + '; '.join(r['violations']))
         diff = ''.join(difflib.unified_diff(old.splitlines(True), new.splitlines(True), f'a/{path}', f'b/{path}'))
-        if not dry_run and new != old: open(full, 'w', encoding='utf-8').write(new)
+        if not dry_run and new != old: _atomic_write(full, new)
         return dict(written=not dry_run and new != old, dry_run=bool(dry_run), changed=r['changed'], diff=diff)
     def check(self, path, base_text, allow=None, ignore_whitespace=False):
         new = open(self._path(path), encoding='utf-8').read()
@@ -82,9 +97,15 @@ class Server:
     def handle(self, msg):
         if not isinstance(msg, dict):
             return dict(jsonrpc='2.0', id=None, error=dict(code=-32600, message='invalid request'))
-        m, mid, p = msg.get('method'), msg.get('id'), msg.get('params') or {}
+        m, mid, p = msg.get('method'), msg.get('id'), msg.get('params')
+        if p is None: p = {}
+        if not isinstance(p, dict):
+            if mid is None: return None
+            return dict(jsonrpc='2.0', id=mid, error=dict(code=-32602, message='params must be an object'))
         if m == 'initialize':
-            res = dict(protocolVersion=p.get('protocolVersion', '2025-06-18'), capabilities=dict(tools={}),
+            want = p.get('protocolVersion')
+            ver = want if want in PROTOCOL_VERSIONS else PROTOCOL_VERSIONS[0]
+            res = dict(protocolVersion=ver, capabilities=dict(tools={}),
                        serverInfo=dict(name='dotslot', version=__version__))
         elif m == 'tools/list': res = dict(tools=TOOLS)
         elif m == 'tools/call':

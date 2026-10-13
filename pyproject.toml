@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dotslot"
-version = "0.3.0"
+version = "0.3.1"
 description = "Let agents fill the blanks in a file, and prove they touched nothing else."
 readme = "README.md"
 license = "MIT"
@@ -12,7 +12,20 @@ license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["wcwidth>=0.2.6"]
 keywords = ["templates", "fixed-width", "ai-agents", "mcp", "pre-commit", "lint"]
-classifiers = ["Programming Language :: Python :: 3", "Environment :: Console", "Topic :: Software Development :: Quality Assurance"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Text Processing",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
@@ -23,6 +36,9 @@ dotslot-mcp = "dotslot.mcp:main"
 
 [project.urls]
 Homepage = "https://github.com/ao3575911/dotslot"
+Source = "https://github.com/ao3575911/dotslot"
+Issues = "https://github.com/ao3575911/dotslot/issues"
+Documentation = "https://github.com/ao3575911/dotslot#readme"
 Changelog = "https://github.com/ao3575911/dotslot/blob/main/CHANGELOG.md"
 
 [tool.setuptools]

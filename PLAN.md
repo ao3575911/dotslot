@@ -84,8 +84,8 @@ Agents are good at filling templates and bad at leaving the rest alone. dotslot 
 ## 7. Roadmap
 | version | scope | exit criteria |
 |---|---|---|
-| **v0.2** (1 week) | Done in the prototype: `_` padding, free unnamed slots, escapes, comment-only default, `new`, `repad`, fill-safe `check`, the Markdown warning. Remaining: package as `dotslot` on PyPI (not yet uploaded), README, `--ignore-whitespace`, a clearer hint for h5 | 42 tests green; `experiments/run_v02.sh` reproduces v02, h and i; every v0.1 "fails" row is either fixed or listed as open in §2 |
-| **v0.3** (MCP + Action) | Harden the MCP server (schema validation, dry-run diffs, `--allow` per call); Action released with a JSON summary; pre-commit published; Claude Code, Cursor and aider kits documented | All of h1–h9 pass in CI on a sample repo; one real agent session each in Claude Code, Cursor and aider fills a template with zero violations, or the violation is caught and fixed by the agent; the Action runs in under 10 s on a 100-file PR |
+| **v0.2** (done, 0.2.1 on PyPI) | Done: `_` padding, free unnamed slots, escapes, comment-only default, `new`, `repad`, fill-safe `check`, the Markdown warning. PyPI package, README and h5 hint shipped in 0.2.1; `--ignore-whitespace` in 0.3.0 | 42 tests green; `experiments/run_v02.sh` reproduces v02, h and i; every v0.1 "fails" row is either fixed or listed as open in §2 |
+| **v0.3** (done, 0.3.0; live agent sessions pending) | Harden the MCP server (schema validation, dry-run diffs, `--allow` per call); Action released with a JSON summary; pre-commit published; Claude Code, Cursor and aider kits documented | All of h1–h9 pass in CI on a sample repo; one real agent session each in Claude Code, Cursor and aider fills a template with zero violations, or the violation is caught and fixed by the agent; the Action runs in under 10 s on a 100-file PR |
 | **v1.0** | Frozen spec with a conformance suite; npm CLI; VS Code extension; tree-sitter comment detection; migration tool from v0.1 `=` syntax | Python and npm pass the same fixtures; no open "fails" items; 3 external repos using the Action; the spec has had one outside review |
 
 ## 8. Launch

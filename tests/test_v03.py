@@ -127,3 +127,33 @@ def test_exit_gate_h8_claude_code_hook(repo):
     (repo / 'release.md').write_text(REL.replace('3.1', '3.2'))
     p = subprocess.run(['bash', str(hook)], input=ev, text=True, env=env, capture_output=True)
     assert p.returncode == 2 and 'fill-only' in p.stderr
+
+
+# --- v0.3.1 hardening -------------------------------------------------------
+import os as _os
+from dotslot import mcp as _mcp
+
+def test_symlink_escape_rejected(tmp_path):
+    root = tmp_path / 'root'; root.mkdir(); (tmp_path / 'secret.md').write_text(T)
+    (root / 'link.md').symlink_to(tmp_path / 'secret.md')
+    s = Server(str(root))
+    with pytest.raises(Exception, match='outside'): s.scan('link.md')
+    with pytest.raises(Exception, match='outside'): s.scan('../secret.md')
+
+def test_failed_write_keeps_original(srv, tmp_path, monkeypatch):
+    before = (tmp_path / 'doc.md').read_text()
+    def boom(a, b): raise OSError('disk full')
+    monkeypatch.setattr(_mcp.os, 'replace', boom)
+    slot = srv.scan('doc.md')['slots'][0]['name'] or '@1'
+    with pytest.raises(OSError): srv.fill('doc.md', {slot: 'x'})
+    assert (tmp_path / 'doc.md').read_text() == before
+    assert [p for p in _os.listdir(tmp_path) if p.endswith('.tmp')] == []
+
+def test_list_params_rejected(srv):
+    r = srv.handle(dict(jsonrpc='2.0', id=7, method='tools/call', params=[1, 2]))
+    assert r['error']['code'] == -32602
+
+def test_protocol_negotiation(srv):
+    init = lambda v: srv.handle(dict(jsonrpc='2.0', id=1, method='initialize', params=dict(protocolVersion=v)))['result']['protocolVersion']
+    assert init('2025-03-26') == '2025-03-26'
+    assert init('1999-01-01') == '2025-06-18'
