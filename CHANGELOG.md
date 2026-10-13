@@ -4,6 +4,14 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.8.0] - unreleased
+
+### Added
+- VS Code extension in `vscode/` (also suitable for Open VSX): slot highlighting, `used/capacity` inlay hints,
+  scanner diagnostics, optional `dotslot.maxLineLength` warning, and a **Fill slot** command that validates the
+  overflow policy as you type. It bundles the npm scanner. CI builds `dotslot.vsix` as an artifact. Not yet
+  published.
+
 ## [0.7.0] - unreleased
 
 ### Added

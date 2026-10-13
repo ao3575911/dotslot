@@ -33,7 +33,7 @@ Requires Python 3.10+ and `wcwidth`.
 
 ## Use
 
-An npm build of `scan`/`fill`/`check` lives in [`npm/`](npm/) (`npx dotslot`, once published).
+An npm build of `scan`/`fill`/`check` lives in [`npm/`](npm/) (`npx dotslot`, once published). A VS Code extension lives in [`vscode/`](vscode/).
 
 ```bash
 dotslot new notes --width 26 --lines 3 --comment '# '   # generate a slot or block
