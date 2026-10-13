@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dotslot"
-version = "0.5.0"
+version = "0.6.0"
 description = "Let agents fill the blanks in a file, and prove they touched nothing else."
 readme = "README.md"
 license = "MIT"

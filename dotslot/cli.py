@@ -163,6 +163,22 @@ def cmd_check(a):
     if a.json: print(json.dumps(reports, ensure_ascii=False, indent=1))
     return rc
 
+def cmd_migrate(a):
+    from .migrate import migrate_text
+    rc = 0
+    for path in a.files:
+        old = open(path, encoding='utf-8').read()
+        new, changes, problems = migrate_text(old, path, a.mode, ' ' if a.pad == 'space' else '_')
+        for ln, col, o, n in changes: print(f'{path}:{ln}:{col+1}: {o} -> {n}', file=sys.stderr)
+        for ln, col, o, msg in problems: print(f'{path}:{ln}:{col+1}: error: {o}: {msg}', file=sys.stderr); rc = 2
+        if a.check:
+            if changes: rc = max(rc, 1)
+        elif a.in_place:
+            if new != old: open(path, 'w', encoding='utf-8').write(new)
+        else:
+            sys.stdout.write(new)
+    return rc
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='dotslot', description='fixed-width <./____> slots (v0.2)')
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -202,5 +218,9 @@ def main(argv=None):
     c.add_argument('--ignore-whitespace', action='store_true',
                    help='with --base: ignore trailing whitespace changes outside slots')
     c.add_argument('--json', action='store_true')
+    g = sub.add_parser('migrate', help='rewrite v0.1 `=` slots in the current syntax, keeping widths'); common(g)
+    g.add_argument('-i', '--in-place', action='store_true'); g.add_argument('--check', action='store_true',
+                   help='exit 1 if any slot would change (CI)')
+    g.add_argument('--pad', choices=['_', 'space'], default='_', help='padding to write (default _)')
     a = ap.parse_args(argv)
-    return dict(scan=cmd_scan, fill=cmd_fill, check=cmd_check, fit=cmd_fit, new=cmd_new, repad=cmd_repad)[a.cmd](a)
+    return dict(scan=cmd_scan, fill=cmd_fill, check=cmd_check, fit=cmd_fit, new=cmd_new, repad=cmd_repad, migrate=cmd_migrate)[a.cmd](a)

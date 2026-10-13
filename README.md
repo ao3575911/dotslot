@@ -40,6 +40,7 @@ dotslot fill FILE --set name=value -i                     # fill in place, width
 dotslot check FILE --git-base HEAD [--allow a,b]          # prove only slots changed
 dotslot check FILE --git-base HEAD --ignore-whitespace    # ...ignoring trailing whitespace outside slots
 dotslot repad FILE --base OLD -i                          # restore padding after a hand edit
+dotslot migrate FILE... -i                               # rewrite v0.1 `=` slots in the current syntax
 dotslot fit FILE --targets 80,100,120                     # where will lines wrap?
 ```
 

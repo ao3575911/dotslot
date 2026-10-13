@@ -4,6 +4,13 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.6.0] - unreleased
+
+### Added
+- `dotslot migrate FILE... [-i] [--check] [--pad _|space]`: rewrites v0.1 slots (`name=value`, `=value`, space
+  padding) in the current syntax and keeps every slot's width. Slots already in the current syntax are left alone,
+  so it is idempotent; `--check` exits 1 when anything would change.
+
 ## [0.5.0] - unreleased
 
 ### Added
