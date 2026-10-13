@@ -60,3 +60,13 @@ jobs:
       - uses: ./
         with: { files: "no-such-dir/*.md", base: "HEAD", report: "empty.json" }
       - run: test "$(cat empty.json)" = "[]"
+  npm:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: npm } }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: node --version && npm ci --no-audit --no-fund
+      - name: build, conformance fixtures, CLI tests
+        run: npm test
+      - name: package contents
+        run: npm pack --dry-run 2>&1 | tee pack.log && grep -q 'dist/cli.js' pack.log && ! grep -q conformance pack.log

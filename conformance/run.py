@@ -4,6 +4,7 @@ import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from dotslot.core import scan_text, fill_text, SlotError  # noqa: E402
 from dotslot.verify import verify  # noqa: E402
+from dotslot.width import cells  # noqa: E402
 from dotslot import treesitter  # noqa: E402
 
 CAPS = {'treesitter'} if treesitter.available() else set()
@@ -11,6 +12,8 @@ CAPS = {'treesitter'} if treesitter.available() else set()
 def evaluate(c, strict=False):
     if strict and not set(c.get('requires', ())) <= CAPS: raise SystemExit(f"{c['id']}: needs {c['requires']}")
     path, mode = c.get('path', '-'), c.get('mode', 'auto')
+    if c['op'] == 'width':
+        return [cells(x) for x in c['input']]
     if c['op'] == 'scan':
         slots, issues = scan_text(c['input'], path, mode)
         return dict(

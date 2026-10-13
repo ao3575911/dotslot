@@ -88,10 +88,11 @@ The result MUST list the changed slots by name, or `@N` for unnamed slots.
 
 ## 8. Conformance
 An implementation conforms when it passes every fixture in `conformance/fixtures/`. Each fixture is JSON:
-`{id, description, op: scan|fill|check, path, mode?, input, base?, values?, allow?, ignore_whitespace?, expect}`.
+`{id, description, op: scan|fill|check|width, path, mode?, input, base?, values?, allow?, ignore_whitespace?, expect}`.
 - `scan` expects `slots` (index, name, kind, policy, 1-based line, 0-based cell col, width, capacity, lines, value)
   and `issues` (severity `E`/`W`, line; messages are not normative).
 - `fill` expects `output` (exact text) or `error: true`.
 - `check` expects `ok` and `changed`.
 
-Runners: `python conformance/run.py`.
+Runners: `python conformance/run.py` (Python) and `cd npm && npm test` (TypeScript).
+`width` fixtures expect a list of cell counts for a list of strings.

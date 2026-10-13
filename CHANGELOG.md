@@ -4,6 +4,16 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.7.0] - unreleased
+
+### Added
+- npm CLI in `npm/` (package `dotslot`, TypeScript, no runtime dependencies): `scan`, `fill`, `check` with the
+  same flags and exit codes as the Python CLI, and a library API (`scanText`, `fillText`, `verify`). Not yet
+  published.
+- `width` conformance fixture (≈800 code points and clusters) so both implementations share one width model;
+  `npm/scripts/gen_tables.py` generates the TypeScript tables from Python `wcwidth`.
+- CI `npm` job: build, all non-tree-sitter conformance fixtures, CLI tests, package contents.
+
 ## [0.6.0] - unreleased
 
 ### Added

@@ -4,6 +4,16 @@ import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from run import evaluate  # noqa: E402
 
+def _corpus():
+    import unicodedata
+    out = []
+    for c in list(range(0x20, 0x3000, 37)) + list(range(0x3000, 0x10000, 211)) + list(range(0x1F000, 0x1FB00, 13)) + list(range(0x20000, 0x30000, 4099)):
+        ch = chr(c)
+        if unicodedata.category(ch) in ('Cs', 'Co', 'Cn', 'Cc'): continue
+        out.append(ch)
+    out += ['e\u0301', '👍🏽', '👨\u200d👩\u200d👧', '❤️', '☺\ufe0f', '⌚\ufe0e', '🇦🇺', '🇦', 'a\u200bb', 'ｆｕｌｌ', '\x1b[31mred\x1b[0m', 'नमस्ते', 'กำ']
+    return out
+WIDTH_CORPUS = _corpus()
 G = '# <./notes+:__________>\n# <./|________________>\nx = 1\n'
 M = 'Owner: `<./owner:____________>`\n'
 CASES = [
@@ -67,6 +77,7 @@ CASES = [
  ('check-trailing-ws', 'Trailing whitespace counts by default.', dict(op='check', path='a.txt', base='a\n<./s:____>\n', input='a  \n<./s:____>\n')),
  ('check-ignore-ws', 'ignore_whitespace tolerates trailing whitespace.', dict(op='check', path='a.txt', base='a\n<./s:____>\n', input='a  \n<./s:____>\n', ignore_whitespace=True)),
  ('check-block-height', 'Block height change is a violation.', dict(op='check', path='a.txt', base='<./n:____>\n<./|______>\n', input='<./n:____>\n')),
+ ('width-corpus', 'Cell widths of single code points and clusters (wcwidth model).', dict(op='width', input=WIDTH_CORPUS)),
  # --- parser-based comment detection (fixtures marked requires: treesitter)
  ('ts-py-multiline-string', 'A # inside a triple-quoted string is not a comment.', dict(op='scan', path='a.py', requires=['treesitter'], input='s = """\n# <./a:____>\n"""  # <./b:____>\n')),
  ('ts-js-template-literal', 'A // inside a multi-line template literal is not a comment.', dict(op='scan', path='a.js', requires=['treesitter'], input='const s = `\n// <./a:____>\n`; // <./b:____>\n')),

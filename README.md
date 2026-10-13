@@ -33,6 +33,8 @@ Requires Python 3.10+ and `wcwidth`.
 
 ## Use
 
+An npm build of `scan`/`fill`/`check` lives in [`npm/`](npm/) (`npx dotslot`, once published).
+
 ```bash
 dotslot new notes --width 26 --lines 3 --comment '# '   # generate a slot or block
 dotslot scan FILE                                         # list slots, widths, capacity
