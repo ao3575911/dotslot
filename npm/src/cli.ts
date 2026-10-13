@@ -39,7 +39,21 @@ function scan(a: Args, mode: Mode): number {
     for (const [sev, l, c, m] of issues) process.stderr.write(`${p}:${l + 1}:${c}: ${sev}: ${m}\n`);
   }
   if (a.flags.has('--json')) { console.log(JSON.stringify(rows, null, 1)); return 0; }
-  for (const r of rows as any[]) console.log(`${r.file}:${r.line}:${r.col}  @${r.index} ${(r.name ?? '-').padEnd(12)} ${r.role.padEnd(6)} w=${String(r.width).padEnd(3)} x${r.lines} cap=${String(r.capacity).padEnd(3)} ${r.filled ? 'filled' : 'empty '} ${(r.policy ?? '').padEnd(8)} ${r.in_comment ? '#' : ' '} ${r.value === null ? '' : JSON.stringify(r.value)}`);
+  for (const r of rows as any[]) {
+    const parts = [
+      `${r.file}:${r.line}:${r.col}  @${r.index}`,
+      (r.name ?? '-').padEnd(12),
+      r.role.padEnd(6),
+      `w=${String(r.width).padEnd(3)}`,
+      `x${r.lines}`,
+      `cap=${String(r.capacity).padEnd(3)}`,
+      r.filled ? 'filled' : 'empty ',
+      (r.policy ?? '').padEnd(8),
+      r.in_comment ? '#' : ' ',
+      r.value === null ? '' : JSON.stringify(r.value),
+    ];
+    console.log(parts.join(' '));
+  }
   return 0;
 }
 function fill(a: Args, mode: Mode): number {
