@@ -1,0 +1,47 @@
+name: Bug report
+description: Something is broken or unexpected
+labels: ["type: fix"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: dotslot version
+      description: Output of `dotslot --version` or the package version you installed.
+      placeholder: "0.8.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Python (pip)
+        - npm
+        - GitHub Action
+        - pre-commit
+        - MCP
+        - VS Code / Open VSX
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro
+      description: Minimal file or snippet, and the exact command.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+      description: Include stderr and exit code when relevant.
+    validations:
+      required: true
