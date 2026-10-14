@@ -1,7 +1,7 @@
 {
   "name": "dotslot",
   "displayName": "dotslot",
-  "description": "Highlight and fill fixed-width <./____> slots; width hints and slot diagnostics.",
+  "description": "Highlight and fill dotslot fixed-width slots, with width hints and slot diagnostics.",
   "version": "0.8.0",
   "publisher": "ao3575911",
   "license": "MIT",
