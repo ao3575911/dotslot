@@ -21,7 +21,7 @@ jobs:
         with: { ref: "${{ inputs.tag }}" }
       - name: Version must match the tag
         run: test "v$(node -p 'require("./package.json").version')" = "${{ inputs.tag }}"
-      - run: npm i -g npm@11 && npm ci && npm test
+      - run: npm ci && npm test
       - name: Publish
         env: { NODE_AUTH_TOKEN: "${{ secrets.NPM_TOKEN }}" }
         run: |
