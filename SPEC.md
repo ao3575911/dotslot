@@ -21,14 +21,17 @@ pad       = "_" | " "
 3. If the body starts with `|`, the slot is a **continuation**; the rest of the body is its value.
 4. Otherwise, if the body starts with a `header`, the slot is **named** (when IDENT is present) or an **unnamed slot
    with a policy**. The rest of the body is the value.
-5. Otherwise the whole body is the value of an **unnamed** slot.
+5. Otherwise, if the body starts with `:` or ends with an unescaped `:` (for example `<./:___>`, `<./a b:__>`),
+   the header is **malformed**: implementations MUST report an error and ignore the slot.
+   Otherwise the whole body is the value of an **unnamed** slot.
 6. A slot is **empty** when its value is empty, else **filled**.
 7. An interior containing a tab, or whose body and padding are both empty, is **invalid**: implementations MUST
    report a warning and ignore it.
 8. `<./>` (zero width) and a `<./` with no closing `>` on the line MUST be reported as errors.
 9. Escapes in values are `\\ \< \> \_ \: \|`. Implementations MUST unescape when reporting a value and MUST escape
-   when writing one: `\ < >` always; a leading `|` and a leading `IDENT:`-like prefix in unnamed slots; a trailing pad
-   character.
+   when writing one: `\ < >` always; a leading `|` and a leading `IDENT:`-like prefix, a leading `:` and a trailing `:` in unnamed slots;
+   a trailing pad character. Fill MUST reject control, bidi (U+202A–202E, U+2066–2069) and zero-width characters
+   in values unless the caller opts in.
 
 ## 2. Width and capacity
 1. **Width W** is the display width in terminal cells of the interior as it appears in the file (escaped form).

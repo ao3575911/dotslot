@@ -45,6 +45,8 @@ def escape(v: str, unnamed: bool) -> str:
         if v[:1] == '|': v = '\\' + v
         m = HEADER.match(v)
         if m: v = v[:m.end() - 1] + '\\:' + v[m.end():]
+        if v[:1] == ':': v = '\\' + v
+        if v[-1:] == ':' and v[-2:] != '\\:': v = v[:-1] + '\\:'
     if v and v[-1] in PAD: v = v[:-1] + '\\' + v[-1]
     return v
 
@@ -98,6 +100,8 @@ def parse_interior(s: str):
                     header=m.group(0), raw_value=rest, pad=pad)
     if not body:
         return dict(kind='empty', pad=pad) if padding else None
+    if body[0] == ':' or (body[-1] == ':' and not re.search(r'(?<!\\)(\\\\)*\\:$', body)):
+        return 'malformed'
     return dict(kind='filled', raw_value=body, pad=pad)
 
 def comment_start(line: str, markers) -> int:
@@ -144,6 +148,8 @@ def scan_text(text: str, path: str = '-', mode: str = 'auto'):
             if m.group(1) == '':
                 issues.append(('E', i, col, 'zero-width slot <./>')); continue
             p = parse_interior(m.group(1))
+            if p == 'malformed':
+                issues.append(('E', i, col, f'malformed slot header {m.group(0)!r} (names are letters, digits, _ or -; escape a literal : as \\:)')); continue
             if p is None:
                 issues.append(('W', i, col, f'slot-like text {m.group(0)!r} is not a valid slot (ignored)')); continue
             if markers is not None and not in_c(m.start()):
@@ -185,8 +191,13 @@ def scan_text(text: str, path: str = '-', mode: str = 'auto'):
     return top, issues
 
 # ---------------------------------------------------------------- fill
-def clean(v: str, block: bool):
+UNSAFE = re.compile('[\x00-\x08\x0b-\x1f\x7f-\x9f\u200b-\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]')
+
+def clean(v: str, block: bool, allow_unsafe: bool = False):
     v = str(v)
+    if not allow_unsafe:
+        m = UNSAFE.search(v.replace('\n', ' ') if block else v.replace('\n', ''))
+        if m: raise SlotError(f'value contains unsafe character U+{ord(m.group()):04X} (control, bidi or zero-width); use --allow-unsafe-chars to permit')
     if block: v = re.sub(r'\s*\n\s*', ' ', v)
     if '\t' in v or '\n' in v:
         raise SlotError('value contains a tab or newline; inline slots hold one line')
@@ -234,7 +245,7 @@ def wrap_words(v, caps):
         lines.append(cur)
     return lines, ' '.join(words[k:])
 
-def fill_text(text, values, path='-', mode='auto', default_policy='error', clear=(), allow=None):
+def fill_text(text, values, path='-', mode='auto', default_policy='error', clear=(), allow=None, allow_unsafe=False):
     slots, issues = scan_text(text, path, mode)
     errs = [x for x in issues if x[0] == 'E']
     if errs: raise SlotError('; '.join(f'line {l+1}: {m}' for _, l, _, m in errs))
@@ -253,7 +264,7 @@ def fill_text(text, values, path='-', mode='auto', default_policy='error', clear
             continue
         used.add(target)
         pol = s.policy or default_policy; what = s.name or key; unnamed = not s.header
-        v = clean(values[target], bool(s.conts))
+        v = clean(values[target], bool(s.conts), allow_unsafe)
         if not s.conts:
             raw = fit_value(v, s.capacity, pol, what, unnamed)
             edits.append((s.line, s.start, s.end, '<./' + render(s.header, raw, s.width, s.pad) + '>'))

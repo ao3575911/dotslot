@@ -1,0 +1,13 @@
+{
+ "id": "fill-unnamed-trailing-colon",
+ "description": "Unnamed value ending in a colon is escaped.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./________>\n",
+ "values": {
+  "@1": "note:"
+ },
+ "expect": {
+  "output": "<./note\\:__>\n"
+ }
+}

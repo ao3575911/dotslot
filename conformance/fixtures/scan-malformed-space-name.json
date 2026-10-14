@@ -1,0 +1,16 @@
+{
+ "id": "scan-malformed-space-name",
+ "description": "A header name with a space is malformed.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./a b:__>\n",
+ "expect": {
+  "slots": [],
+  "issues": [
+   {
+    "severity": "E",
+    "line": 1
+   }
+  ]
+ }
+}

@@ -27,6 +27,8 @@ export function escape(v: string, unnamed: boolean): string {
     if (v.startsWith('|')) v = '\\' + v;
     const m = HEADER.exec(v);
     if (m) v = v.slice(0, m[0].length - 1) + '\\:' + v.slice(m[0].length);
+    if (v.startsWith(':')) v = '\\' + v;
+    if (v.endsWith(':') && !v.endsWith('\\:')) v = v.slice(0, -1) + '\\:';
   }
   if (v && PAD.includes(v[v.length - 1])) v = v.slice(0, -1) + '\\' + v[v.length - 1];
   return v;
@@ -52,7 +54,7 @@ export class Slot {
   blockValue() { return [this.value ?? '', ...this.conts.map((c) => c.value ?? '')].filter((p) => p).join(' '); }
 }
 
-function parseInterior(s: string): Partial<Slot> | null {
+function parseInterior(s: string): Partial<Slot> | 'malformed' | null {
   if (s.includes('\t')) return null;
   const [body, padding] = splitPad(s);
   const pad = padding.includes('_') ? '_' : padding ? ' ' : '_';
@@ -64,6 +66,7 @@ function parseInterior(s: string): Partial<Slot> | null {
              header: m[0], rawValue: rest, pad };
   }
   if (!body) return padding ? { kind: 'empty', pad } : null;
+  if (body[0] === ':' || (body.endsWith(':') && !/(?<!\\)(\\\\)*\\:$/.test(body))) return 'malformed';
   return { kind: 'filled', rawValue: body, pad };
 }
 
@@ -100,6 +103,7 @@ export function scanText(text: string, path = '-', mode: Mode = 'auto'): [Slot[]
       const col = displayWidth(ln.slice(0, st));
       if (m[1] === '') { issues.push(['E', i, col, 'zero-width slot <./>']); continue; }
       const p = parseInterior(m[1]);
+      if (p === 'malformed') { issues.push(['E', i, col, `malformed slot header '${m[0]}' (names are letters, digits, _ or -; escape a literal : as \\:)`]); continue; }
       if (!p) { issues.push(['W', i, col, `slot-like text ${m[0]} is not a valid slot (ignored)`]); continue; }
       if (markers && !inC(st)) { issues.push(['W', i, col, `${m[0]} is outside a comment (ignored; use --mode prose)`]); continue; }
       const s = Object.assign(new Slot(i, st, st + m[0].length, col, m[1]), p, { inComment: markers !== null });
@@ -142,8 +146,13 @@ export function scanText(text: string, path = '-', mode: Mode = 'auto'): [Slot[]
 }
 
 // ------------------------------------------------------------------ fill
-function clean(v: unknown, block: boolean): string {
+const UNSAFE = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/u;
+function clean(v: unknown, block: boolean, allowUnsafe = false): string {
   let s = String(v);
+  if (!allowUnsafe) {
+    const m = UNSAFE.exec(s.replace(/\n/g, block ? ' ' : ''));
+    if (m) throw new SlotError(`value contains unsafe character U+${m[0].codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')} (control, bidi or zero-width); use --allow-unsafe-chars to permit`);
+  }
   if (block) s = s.replace(/\s*\n\s*/g, ' ');
   if (s.includes('\t') || s.includes('\n')) throw new SlotError('value contains a tab or newline; inline slots hold one line');
   return s.replace(/ +$/, '');
@@ -197,7 +206,7 @@ const stripChars = (s: string, chars: string) => {
 };
 
 export function fillText(text: string, values: Record<string, unknown>, path = '-', mode: Mode = 'auto',
-                         defaultPolicy = 'error', clear: string[] = [], allow: Set<string> | null = null): string {
+                         defaultPolicy = 'error', clear: string[] = [], allow: Set<string> | null = null, allowUnsafe = false): string {
   const [slots, issues] = scanText(text, path, mode);
   const errs = issues.filter((x) => x[0] === 'E');
   if (errs.length) throw new SlotError(errs.map(([, l, , m]) => `line ${l + 1}: ${m}`).join('; '));
@@ -215,7 +224,7 @@ export function fillText(text: string, values: Record<string, unknown>, path = '
       continue;
     }
     const pol = s.policy ?? defaultPolicy, what = s.name ?? key, unnamed = !s.header;
-    const v = clean(values[target], s.conts.length > 0);
+    const v = clean(values[target], s.conts.length > 0, allowUnsafe);
     if (!s.conts.length) {
       edits.push([s.line, s.start, s.end, '<./' + render(s.header, fitValue(v, s.capacity, pol, what, unnamed), s.width, s.pad) + '>']);
       continue;

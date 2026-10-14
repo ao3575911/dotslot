@@ -1,0 +1,16 @@
+{
+ "id": "scan-malformed-empty-name",
+ "description": "A header with no name before the colon is malformed.",
+ "op": "scan",
+ "path": "a.txt",
+ "input": "<./:___>\n",
+ "expect": {
+  "slots": [],
+  "issues": [
+   {
+    "severity": "E",
+    "line": 1
+   }
+  ]
+ }
+}

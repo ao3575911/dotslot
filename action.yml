@@ -1,7 +1,7 @@
 # GitHub composite action. Usage:
 #   - uses: actions/checkout@v5
 #     with: { fetch-depth: 0 }
-#   - uses: ao3575911/dotslot@v0.8.0
+#   - uses: ao3575911/dotslot@v0.8.1
 #     with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
 name: dotslot check
 description: Fail the PR if anything outside <./…> slots changed (fill-safe AI edits).

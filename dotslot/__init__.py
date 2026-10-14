@@ -1,3 +1,3 @@
 from .core import scan_text, fill_text, SlotError  # noqa
 from .verify import verify  # noqa
-__version__ = "0.8.0"
+__version__ = "0.8.1"

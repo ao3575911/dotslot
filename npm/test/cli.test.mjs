@@ -21,4 +21,10 @@ r = run('scan', f, '--json'); assert.equal(JSON.parse(r.stdout)[0].value, 'alice
 writeFileSync(f, 'Owner: `<./owner:alice_______>`\nchanged\n');
 r = run('check', f, '--base', base); assert.equal(r.status, 1); assert.match(r.stdout, /VIOLATION/);
 assert.equal(run('--version').stdout.trim(), JSON.parse(readFileSync(new URL('../package.json', import.meta.url))).version);
+const g = join(d, 'u.py'); writeFileSync(g, '# <./n:______>\n');
+for (const v of ['a\x1b[2J', 'a\u202eb', 'a\u2066b', 'a\u200bb']) { r = run('fill', g, '--set', 'n=' + v); assert.equal(r.status, 2); assert.match(r.stderr, /unsafe/); }
+r = run('fill', g, '--set', 'n=a\u202eb', '--allow-unsafe-chars'); assert.equal(r.status, 0, r.stderr);
+writeFileSync(g, '# <./:___>\n'); assert.equal(run('check', g).status, 1);
+writeFileSync(g, '# <./a b:__>\n'); assert.equal(run('check', g).status, 1);
+r = spawnSync(process.execPath, [cli, 'check', '--git-base', 'no-such-ref-xyz', g], { encoding: 'utf8', cwd: d }); assert.equal(r.status, 2);
 console.log('cli tests passed');

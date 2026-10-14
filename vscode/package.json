@@ -2,7 +2,7 @@
   "name": "dotslot",
   "displayName": "dotslot",
   "description": "Highlight and fill dotslot fixed-width slots, with width hints and slot diagnostics.",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "publisher": "ao3575911",
   "license": "MIT",
   "repository": {

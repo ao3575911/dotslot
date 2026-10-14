@@ -8,7 +8,7 @@ import { verify, Result } from './verify.js';
 const VERSION: string = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const USAGE = `usage: dotslot {scan,fill,check} FILE... [options]
   scan  [--json] [--mode auto|prose|comments]
-  fill  --set name=value ... [--json-values F] [--clear name] [--overflow error|ellipsis|truncate|grow] [--allow a,b] [-i]
+  fill  --set name=value ... [--json-values F] [--clear name] [--overflow error|ellipsis|truncate|grow] [--allow a,b] [--allow-unsafe-chars] [-i]
   check [--base FILE | --git-base REV] [--allow a,b] [--ignore-whitespace] [--require-filled] [--strict] [--json]`;
 
 interface Args { cmd: string; files: string[]; opts: Record<string, string[]>; flags: Set<string> }
@@ -63,7 +63,7 @@ function fill(a: Args, mode: Mode): number {
   let rc = 0;
   for (const p of a.files) {
     let out: string;
-    try { out = fillText(read(p), vals, p, mode, one(a, '--overflow') ?? 'error', a.opts['--clear'] ?? [], allowOf(a)); }
+    try { out = fillText(read(p), vals, p, mode, one(a, '--overflow') ?? 'error', a.opts['--clear'] ?? [], allowOf(a), a.flags.has('--allow-unsafe-chars')); }
     catch (e) { if (!(e instanceof SlotError)) throw e; process.stderr.write(`${p}: error: ${e.message}\n`); rc = 2; continue; }
     if (a.flags.has('--in-place') && p !== '-') writeFileSync(p, out); else process.stdout.write(out);
   }
@@ -72,7 +72,10 @@ function fill(a: Args, mode: Mode): number {
 function baseText(a: Args, p: string): string | null {
   if (one(a, '--base')) return read(one(a, '--base')!);
   const rev = one(a, '--git-base');
-  if (rev) { try { return execFileSync('git', ['show', `${rev}:./${p}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; } }
+  if (rev) {
+    try { execFileSync('git', ['rev-parse', '--verify', '--quiet', `${rev}^{commit}`], { stdio: 'ignore' }); }
+    catch { die(`error: --git-base: unknown revision '${rev}'`); }
+    try { return execFileSync('git', ['show', `${rev}:./${p}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; } }
   return null;
 }
 function check(a: Args, mode: Mode): number {

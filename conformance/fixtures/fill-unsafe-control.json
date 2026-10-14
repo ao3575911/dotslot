@@ -1,0 +1,13 @@
+{
+ "id": "fill-unsafe-control",
+ "description": "Terminal escape in a value is rejected.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./n:______>\n",
+ "values": {
+  "n": "a\u001b[2J"
+ },
+ "expect": {
+  "error": true
+ }
+}

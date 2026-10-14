@@ -40,7 +40,7 @@ def cmd_fill(a):
     allow = set(a.allow.split(',')) if a.allow else None
     for p in a.files:
         try:
-            out = fill_text(read(p), vals, p, a.mode, a.overflow, tuple(a.clear or ()), allow)
+            out = fill_text(read(p), vals, p, a.mode, a.overflow, tuple(a.clear or ()), allow, a.allow_unsafe_chars)
         except SlotError as e:
             print(f'{p}: error: {e}', file=sys.stderr); rc = 2; continue
         if a.in_place and p != '-':
@@ -84,11 +84,16 @@ def cmd_fit(a):
     for p in a.files:
         text = read(p)
         if a.set:
-            try: text = fill_text(text, parse_sets(a.set), p, a.mode, a.overflow)
+            try: text = fill_text(text, parse_sets(a.set), p, a.mode, a.overflow, allow_unsafe=a.allow_unsafe_chars)
             except SlotError as e: print(f'{p}: error: {e}', file=sys.stderr); rc = 2; continue
         out, bad = fit_report(text, p, a.mode, targets, a.tab, a.preview)
         print('\n'.join(out)) if out else None
-        if bad.get(a.fail_at or targets[0]): rc = max(rc, 1)
+        if a.fail_at:
+            for i, ln in enumerate(text.split('\n')):
+                w = display_width(ln.rstrip('\r'), 0, a.tab)
+                if w > a.fail_at:
+                    print(f'{p}:{i+1}: line is {w} cells, over --fail-at {a.fail_at}', file=sys.stderr); rc = max(rc, 1)
+        elif bad.get(targets[0]): rc = max(rc, 1)
     return rc
 
 def base_text(a, p):
@@ -197,12 +202,14 @@ def main(argv=None):
         f.add_argument('--overflow', choices=['error', 'ellipsis', 'truncate', 'grow'], default='error',
                        help='policy for slots without a !/~/+ marker')
         f.add_argument('--allow', help='comma list of slot names/@N that may be filled')
+        f.add_argument('--allow-unsafe-chars', action='store_true',
+                       help='permit control, bidi and zero-width characters in values')
         if name == 'fill':
             f.add_argument('--json-values'); f.add_argument('-i', '--in-place', action='store_true')
             f.add_argument('--clear', action='append', help='empty a slot again (name or @N)')
         else:
             f.add_argument('--targets', default='80,100,120'); f.add_argument('--tab', type=int, default=8)
-            f.add_argument('--preview', action='store_true'); f.add_argument('--fail-at', type=int)
+            f.add_argument('--preview', action='store_true'); f.add_argument('--fail-at', type=int, help='exit 1 if any line is wider than N cells')
     n = sub.add_parser('new', help='print a correctly sized slot or block')
     n.add_argument('name', nargs='?'); n.add_argument('--width', type=int, required=True)
     n.add_argument('--lines', type=int, default=1); n.add_argument('--policy', choices=['!', '~', '+'])

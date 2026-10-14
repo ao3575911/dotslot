@@ -1,13 +1,13 @@
 name: publish
-# Manual publishing of the npm CLI and the VS Code extension. Run from the Actions tab after a release tag exists.
+# Manual publishing of the npm CLI and the VS Code extension (Open VSX only). Run from the Actions tab after a release tag exists.
 #   npm:    trusted publishing (OIDC, no token) once configured on npmjs.com; falls back to the NPM_TOKEN secret.
 #           Publishes with provenance.
-#   vscode: VSCE_PAT (Visual Studio Marketplace) and OVSX_PAT (Open VSX) secrets.
+#   vscode: OVSX_PAT secret (Open VSX). The Visual Studio Marketplace is not used.
 on:
   workflow_dispatch:
     inputs:
       target: { description: "npm, vscode or both", required: true, default: npm, type: choice, options: [npm, vscode, both] }
-      tag: { description: "Release tag to publish, e.g. v0.8.0", required: true }
+      tag: { description: "Release tag to publish, e.g. v0.8.1", required: true }
 permissions: { contents: read }
 jobs:
   npm:

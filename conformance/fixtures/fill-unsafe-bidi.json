@@ -1,0 +1,13 @@
+{
+ "id": "fill-unsafe-bidi",
+ "description": "Bidi override in a value is rejected.",
+ "op": "fill",
+ "path": "a.txt",
+ "input": "<./n:______>\n",
+ "values": {
+  "n": "a‮b"
+ },
+ "expect": {
+  "error": true
+ }
+}

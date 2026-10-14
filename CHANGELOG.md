@@ -4,7 +4,19 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-14
+
+### Security
+- `fill` (CLI, npm, MCP) rejects control, bidi (U+202A–202E, U+2066–2069) and zero-width characters in values.
+  Pass `--allow-unsafe-chars` to permit them.
+
 ### Fixed
+- `<./:___>` and `<./a b:__>` are reported as malformed slot headers (error) instead of filled unnamed slots.
+  Unnamed values starting or ending with `:` are escaped on fill.
+- `fit --fail-at N` exits 1 when any line is wider than N cells, not only slot lines at a listed target.
+- npm: `check --git-base <ref>` fails with exit code 2 on an unknown revision.
+- MCP: tests cover schema rejection before write (`values` must be strings, `overflow` must be a known policy)
+  and the `-32700` parse-error reply on a non-JSON line.
 - `fill -i`, `repad -i`, `migrate -i` and the MCP server no longer convert CRLF files to LF; line endings are kept byte-for-byte.
 - `check --git-base <ref>` now fails with exit code 2 on an unknown revision instead of silently passing.
 
@@ -127,7 +139,14 @@ First public release.
 - Trailing whitespace counts as a violation (`--ignore-whitespace` planned for v0.3).
 - Not yet on PyPI or npm (PyPI added in 0.2.1).
 
-[Unreleased]: https://github.com/ao3575911/dotslot/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ao3575911/dotslot/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/ao3575911/dotslot/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/ao3575911/dotslot/compare/v0.6.0...v0.8.0
+[0.7.0]: https://github.com/ao3575911/dotslot/blob/main/CHANGELOG.md#070---2026-10-14
+[0.6.0]: https://github.com/ao3575911/dotslot/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/ao3575911/dotslot/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/ao3575911/dotslot/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/ao3575911/dotslot/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ao3575911/dotslot/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/ao3575911/dotslot/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ao3575911/dotslot/releases/tag/v0.2.0
