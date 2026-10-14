@@ -22,3 +22,9 @@ gpg --import .github/release-signing-key.asc && git tag -v vX.Y.Z  # tag signatu
 - To release an older commit on main: `gh workflow run release -f ref=<sha>` (must be an ancestor of main).
 - If that commit's workflow files differ from main's, GitHub blocks CI from pushing the tag. The failed log prints `TAG_OBJECT_BASE64=...` (the CI-signed tag). Push it, then re-run the same dispatch; CI reuses the tag after verifying its signature and commit:
   `echo "$B64" | base64 -d | git mktag > /tmp/t && git update-ref refs/tags/vX.Y.Z $(cat /tmp/t) && git push origin refs/tags/vX.Y.Z`
+
+## npm and VS Code
+
+`gh workflow run publish -f target=npm|vscode|both -f tag=vX.Y.Z` publishes from a release tag. The package
+version must equal the tag. npm uses trusted publishing (or the `NPM_TOKEN` secret) and adds provenance;
+VS Code uses `VSCE_PAT` and `OVSX_PAT`. Each job runs in its own environment (`npm`, `vscode`), so it can require approval.

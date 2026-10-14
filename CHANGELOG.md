@@ -4,7 +4,16 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
-## [0.8.0] - unreleased
+## [0.8.0] - 2026-10-14
+
+### Fixed
+- CLI: a missing or unreadable file is a one-line error with exit code 2, not a traceback. A closed pipe
+  (`dotslot scan … | head`) exits quietly. Added `-V/--version` and help text for every subcommand.
+- `repad` restores empty slots that lost their padding, not only filled ones.
+- MCP server: exits 0 with no traceback on EOF, SIGINT and SIGTERM.
+- npm CLI: `--version` reads package.json (was hard-coded 0.7.0); missing files and unknown commands are
+  clean errors with exit code 2. The npm package version now matches the repo (0.8.0) and ships LICENSE.
+- Release workflow: optional `ref` input to release an earlier commit on main.
 
 ### Added
 - VS Code extension in `vscode/` (also suitable for Open VSX): slot highlighting, `used/capacity` inlay hints,
@@ -12,7 +21,9 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
   overflow policy as you type. It bundles the npm scanner. CI builds `dotslot.vsix` as an artifact. Not yet
   published.
 
-## [0.7.0] - unreleased
+## [0.7.0] - 2026-10-14
+
+Not released on PyPI; its changes ship in 0.8.0.
 
 ### Added
 - npm CLI in `npm/` (package `dotslot`, TypeScript, no runtime dependencies): `scan`, `fill`, `check` with the
@@ -22,14 +33,14 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
   `npm/scripts/gen_tables.py` generates the TypeScript tables from Python `wcwidth`.
 - CI `npm` job: build, all non-tree-sitter conformance fixtures, CLI tests, package contents.
 
-## [0.6.0] - unreleased
+## [0.6.0] - 2026-10-14
 
 ### Added
 - `dotslot migrate FILE... [-i] [--check] [--pad _|space]`: rewrites v0.1 slots (`name=value`, `=value`, space
   padding) in the current syntax and keeps every slot's width. Slots already in the current syntax are left alone,
   so it is idempotent; `--check` exits 1 when anything would change.
 
-## [0.5.0] - unreleased
+## [0.5.0] - 2026-10-14
 
 ### Added
 - Optional tree-sitter comment detection: `pip install "dotslot[treesitter]"` (Python, JS, TS/TSX, Go, Rust, C, Java,
@@ -38,7 +49,7 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
   `DOTSLOT_NO_TREESITTER=1` forces the heuristic.
 - 4 conformance fixtures marked `requires: ["treesitter"]`; runners without it skip them.
 
-## [0.4.0] - unreleased
+## [0.4.0] - 2026-10-14
 
 ### Added
 - `SPEC.md` v1.0-rc1: normative (MUST/SHOULD) and frozen for outside review. The old text moved to `docs/SPEC-v0.2.md`.

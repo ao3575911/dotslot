@@ -5,25 +5,90 @@
   "version": "0.8.0",
   "publisher": "ao3575911",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/ao3575911/dotslot.git", "directory": "vscode" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ao3575911/dotslot.git",
+    "directory": "vscode"
+  },
   "bugs": "https://github.com/ao3575911/dotslot/issues",
   "homepage": "https://github.com/ao3575911/dotslot#readme",
-  "engines": { "vscode": "^1.85.0" },
-  "categories": ["Linters", "Other"],
-  "keywords": ["templates", "fixed-width", "ai-agents", "slots"],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "dotslot",
+    "templates",
+    "fixed-width",
+    "placeholders",
+    "slots",
+    "ai-agents",
+    "coding-agents",
+    "lint",
+    "mcp"
+  ],
   "main": "./dist/extension.js",
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
-    "commands": [{ "command": "dotslot.fillSlot", "title": "Fill slot", "category": "dotslot" }],
-    "menus": { "editor/context": [{ "command": "dotslot.fillSlot", "group": "1_modification" }] },
+    "commands": [
+      {
+        "command": "dotslot.fillSlot",
+        "title": "Fill slot",
+        "category": "dotslot"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "dotslot.fillSlot",
+          "group": "1_modification"
+        }
+      ]
+    },
     "configuration": {
       "title": "dotslot",
       "properties": {
-        "dotslot.enable": { "type": "boolean", "default": true, "description": "Highlight slots and report slot diagnostics." },
-        "dotslot.inlayHints": { "type": "boolean", "default": true, "description": "Show used/capacity cells after each slot." },
-        "dotslot.mode": { "type": "string", "enum": ["auto", "prose", "comments"], "default": "auto", "description": "Where slots count: auto (prose files bare, code files in comments only)." },
-        "dotslot.overflow": { "type": "string", "enum": ["error", "ellipsis", "truncate", "grow"], "default": "error", "description": "Overflow policy for Fill slot when a slot has no !/~/+ marker." },
-        "dotslot.maxLineLength": { "type": "number", "default": 0, "description": "Warn when a line containing a slot is wider than this many cells (0 = off)." }
+        "dotslot.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight slots and report slot diagnostics."
+        },
+        "dotslot.inlayHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show used/capacity cells after each slot."
+        },
+        "dotslot.mode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "prose",
+            "comments"
+          ],
+          "default": "auto",
+          "description": "Where slots count: auto (prose files bare, code files in comments only)."
+        },
+        "dotslot.overflow": {
+          "type": "string",
+          "enum": [
+            "error",
+            "ellipsis",
+            "truncate",
+            "grow"
+          ],
+          "default": "error",
+          "description": "Overflow policy for Fill slot when a slot has no !/~/+ marker."
+        },
+        "dotslot.maxLineLength": {
+          "type": "number",
+          "default": 0,
+          "description": "Warn when a line containing a slot is wider than this many cells (0 = off)."
+        }
       }
     }
   },
@@ -34,5 +99,18 @@
     "package": "npm run build && vsce package --no-dependencies -o dotslot.vsix",
     "vscode:prepublish": "npm run build"
   },
-  "devDependencies": { "@types/vscode": "~1.85.0", "@types/node": "^20.0.0", "@vscode/vsce": "^3.2.0", "esbuild": "^0.25.0", "typescript": "^5.6.0" }
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "~1.85.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.6.0"
+  },
+  "qna": "marketplace",
+  "pricing": "Free",
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1e293b",
+    "theme": "dark"
+  }
 }

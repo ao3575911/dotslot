@@ -1,6 +1,6 @@
 # pre-commit hooks (https://pre-commit.com). Use from another repo:
 #   - repo: https://github.com/ao3575911/dotslot
-#     rev: v0.3.0
+#     rev: v0.8.0
 #     hooks: [{ id: dotslot-check }, { id: dotslot-lint }]
 - id: dotslot-check
   name: dotslot fill-safe check

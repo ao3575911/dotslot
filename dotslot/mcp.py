@@ -131,13 +131,18 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog='dotslot-mcp'); ap.add_argument('--root', default='.')
     ap.add_argument('--allow', help='comma list of slots that fill/check may change (per-call allow narrows it)')
     a = ap.parse_args(argv); srv = Server(a.root, a.allow.split(',') if a.allow else None)
-    for line in sys.stdin:
-        if not line.strip(): continue
-        try: msg = json.loads(line)
-        except json.JSONDecodeError:
-            out = dict(jsonrpc='2.0', id=None, error=dict(code=-32700, message='parse error'))
-        else: out = srv.handle(msg)
-        if out is not None: sys.stdout.write(json.dumps(out, ensure_ascii=False) + '\n'); sys.stdout.flush()
+    import signal; signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    try:
+        for line in sys.stdin:
+            if not line.strip(): continue
+            try: msg = json.loads(line)
+            except json.JSONDecodeError:
+                out = dict(jsonrpc='2.0', id=None, error=dict(code=-32700, message='parse error'))
+            else: out = srv.handle(msg)
+            if out is not None: sys.stdout.write(json.dumps(out, ensure_ascii=False) + '\n'); sys.stdout.flush()
+    except (KeyboardInterrupt, BrokenPipeError):   # client went away: exit quietly
+        pass
+    return 0
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { scanText, fillText, SlotError, Mode } from './core.js';
 import { verify, Result } from './verify.js';
 
-const VERSION = '0.7.0';
+const VERSION: string = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const USAGE = `usage: dotslot {scan,fill,check} FILE... [options]
   scan  [--json] [--mode auto|prose|comments]
   fill  --set name=value ... [--json-values F] [--clear name] [--overflow error|ellipsis|truncate|grow] [--allow a,b] [-i]
@@ -104,13 +104,19 @@ function check(a: Args, mode: Mode): number {
 
 export function main(argv: string[]): number {
   if (!argv.length || argv[0] === '-h' || argv[0] === '--help') { console.log(USAGE); return 0; }
-  if (argv[0] === '--version') { console.log(VERSION); return 0; }
+  if (argv[0] === '--version' || argv[0] === '-V') { console.log(VERSION); return 0; }
   const a = parse(argv);
   const mode = (one(a, '--mode') ?? 'auto') as Mode;
   if (!['auto', 'prose', 'comments'].includes(mode)) die(`bad --mode ${mode}`);
-  if (!a.files.length) die('no files given\n' + USAGE);
   const fn = ({ scan, fill, check } as Record<string, (a: Args, m: Mode) => number>)[a.cmd];
   if (!fn) die(`unknown command '${a.cmd}'\n` + USAGE);
-  return fn(a, mode);
+  if (!a.files.length) die('no files given\n' + USAGE);
+  try { return fn(a, mode); }
+  catch (e) {
+    const err = e as NodeJS.ErrnoException;
+    if (err.code === 'EPIPE') return 1;
+    if (err.code) die(`error: ${err.message}`);
+    throw e;
+  }
 }
 process.exitCode = main(process.argv.slice(2));

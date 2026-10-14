@@ -13,3 +13,5 @@ npx dotslot check FILE --git-base origin/main --allow owner
 `migrate`, `fit`, `new`, `repad` and the MCP server are Python-only: `pip install dotslot`.
 
 Library: `import { scanText, fillText, verify } from 'dotslot'`.
+
+Exit codes: `0` ok, `1` violation, `2` usage or input error. Install: `npm i -g dotslot` or run with `npx dotslot`.

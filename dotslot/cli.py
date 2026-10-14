@@ -120,7 +120,7 @@ def cmd_repad(a):
     lines = text.split('\n'); fixed = 0
     for b, n in sorted(zip(bs, ns), key=lambda p: (p[1].line, -p[1].start)):
         if b.width != n.width and not n.conts and b.policy != 'grow' and b.header == n.header:
-            if len(n.raw_value) and __import__('dotslot.width', fromlist=['cells']).cells(n.header + n.raw_value) <= b.width:
+            if __import__('dotslot.width', fromlist=['cells']).cells(n.header + n.raw_value) <= b.width:
                 ln = lines[n.line]
                 lines[n.line] = ln[:n.start] + '<./' + render(n.header, n.raw_value, b.width, b.pad) + '>' + ln[n.end:]
                 fixed += 1
@@ -180,15 +180,17 @@ def cmd_migrate(a):
     return rc
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog='dotslot', description='fixed-width <./____> slots (v0.2)')
+    ap = argparse.ArgumentParser(prog='dotslot', description='fixed-width <./____> slots: fill the blanks, prove nothing else changed')
+    from . import __version__
+    ap.add_argument('-V', '--version', action='version', version=f'dotslot {__version__}')
     sub = ap.add_subparsers(dest='cmd', required=True)
     def common(sp):
         sp.add_argument('files', nargs='+')
         sp.add_argument('--mode', choices=['auto', 'prose', 'comments'], default='auto',
                         help='auto: bare slots only in prose files (.md .txt …); everything else comment-only')
-    s = sub.add_parser('scan'); common(s); s.add_argument('--json', action='store_true')
+    s = sub.add_parser('scan', help='list slots, widths and capacity'); common(s); s.add_argument('--json', action='store_true')
     for name in ('fill', 'fit'):
-        f = sub.add_parser(name); common(f)
+        f = sub.add_parser(name, help={'fill': 'set slot values (--set name=value)', 'fit': 'report line widths against terminal targets'}[name]); common(f)
         f.add_argument('--set', action='append', help='name=value or @N=value')
         f.add_argument('--overflow', choices=['error', 'ellipsis', 'truncate', 'grow'], default='error',
                        help='policy for slots without a !/~/+ marker')
@@ -208,7 +210,7 @@ def main(argv=None):
     r = sub.add_parser('repad', help='restore slot widths from a base file (fixes agents that drop padding)')
     r.add_argument('files', nargs=1); r.add_argument('--base', required=True); r.add_argument('-i', '--in-place', action='store_true')
     r.add_argument('--mode', choices=['auto', 'prose', 'comments'], default='auto')
-    c = sub.add_parser('check'); common(c)
+    c = sub.add_parser('check', help='lint slots; with --base/--git-base, prove only slots changed'); common(c)
     c.add_argument('--require', help='comma list of names that must be filled')
     c.add_argument('--require-filled', action='store_true'); c.add_argument('--strict', action='store_true')
     c.add_argument('--fit', type=int, help='also fail lines wider than N cells'); c.add_argument('--tab', type=int, default=8)
@@ -223,4 +225,11 @@ def main(argv=None):
                    help='exit 1 if any slot would change (CI)')
     g.add_argument('--pad', choices=['_', 'space'], default='_', help='padding to write (default _)')
     a = ap.parse_args(argv)
-    return dict(scan=cmd_scan, fill=cmd_fill, check=cmd_check, fit=cmd_fit, new=cmd_new, repad=cmd_repad, migrate=cmd_migrate)[a.cmd](a)
+    try:
+        return dict(scan=cmd_scan, fill=cmd_fill, check=cmd_check, fit=cmd_fit, new=cmd_new, repad=cmd_repad, migrate=cmd_migrate)[a.cmd](a)
+    except BrokenPipeError:   # e.g. `dotslot scan … | head`
+        import os; os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno()); return 1
+    except (OSError, UnicodeDecodeError) as e:
+        print(f'dotslot: error: {e}', file=sys.stderr); return 2
+    except KeyboardInterrupt:
+        return 130

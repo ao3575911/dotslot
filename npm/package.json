@@ -1,23 +1,57 @@
 {
   "name": "dotslot",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Let agents fill the blanks in a file, and prove they touched nothing else.",
   "license": "MIT",
   "type": "module",
-  "repository": { "type": "git", "url": "git+https://github.com/ao3575911/dotslot.git", "directory": "npm" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ao3575911/dotslot.git",
+    "directory": "npm"
+  },
   "homepage": "https://github.com/ao3575911/dotslot#readme",
   "bugs": "https://github.com/ao3575911/dotslot/issues",
-  "keywords": ["templates", "fixed-width", "ai-agents", "lint", "mcp"],
-  "engines": { "node": ">=18" },
-  "bin": { "dotslot": "dist/cli.js" },
+  "keywords": [
+    "dotslot",
+    "templates",
+    "fixed-width",
+    "placeholders",
+    "ai-agents",
+    "coding-agents",
+    "lint",
+    "diff",
+    "mcp",
+    "cli"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "dotslot": "dist/cli.js"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist/*.js", "dist/*.d.ts", "!dist/conformance.*", "README.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/*.js",
+    "dist/*.d.ts",
+    "!dist/conformance.*",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsc -p .",
     "test": "npm run build && node dist/conformance.js && node test/cli.test.mjs",
     "prepack": "npm run build"
   },
-  "devDependencies": { "typescript": "^5.6.0", "@types/node": "^20.0.0" }
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.6.0"
+  }
 }

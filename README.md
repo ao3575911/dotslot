@@ -1,101 +1,96 @@
 [![M8ven Score](https://m8ven.ai/badge/mcp/ao3575911-dotslot-ia87ds?v=c3035f8aeacd04053e6285ac74d5eccb)](https://m8ven.ai/mcp/ao3575911-dotslot-ia87ds?s=readme)
 
-```
-dotslot: let agents fill the blanks, and prove they touched nothing else.
+# dotslot
 
+Let agents fill the blanks in a file, and prove they touched nothing else.
+
+[![ci](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml/badge.svg)](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/dotslot)](https://pypi.org/project/dotslot/)
+· MIT · [Spec](SPEC.md) · [Changelog](CHANGELOG.md)
+
+Mark the editable parts of a file with fixed-width slots. An agent or script fills them; `dotslot check`
+proves the diff changed only the slots and that each slot kept its width, so columns and wraps stay put.
+Works in Markdown, config files and code comments.
+
+```text
 Owner: `<./owner:____________>`   Status: `<./status~:____________>`
 
 $ dotslot fill release.md --set owner=Adam --set status="ready for tag" -i
 $ dotslot check release.md --git-base HEAD
 release.md: fill-safe (2 slot(s) changed)
-
-CLI · pre-commit · GitHub Action · MCP server (Claude Code, Cursor, aider)
 ```
-
-[![ci](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml/badge.svg)](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml) · MIT · v0.3.0 · [Spec](SPEC.md) · [Experiments](EXPERIMENTS.md) · [Changelog](CHANGELOG.md)
-
-## What it is
-
-Mark the parts of a file that may change with `<./________>`. An agent or script fills those blanks and nothing else. `dotslot check` proves the diff touched only the blanks, and that each blank kept its width, so columns and line wraps stay put. It works in docs, configs and code comments.
-
-A file with slots is **fill-only**. That turns "don't touch the rest" into a rule a machine can check.
 
 ## Install
 
-Install from PyPI:
-
-```bash
-pip install dotslot
-dotslot --help
-```
-
-Requires Python 3.10+ and `wcwidth`.
+| Surface | Install |
+|---|---|
+| CLI (Python 3.10+) | `pip install dotslot` (optional: `pip install "dotslot[treesitter]"`) |
+| CLI (Node 18+) | `npx dotslot` — `scan`, `fill`, `check` *(npm release pending)* |
+| GitHub Action | `uses: ao3575911/dotslot@v0.8.0` |
+| pre-commit | `repo: https://github.com/ao3575911/dotslot`, `rev: v0.8.0` |
+| MCP server | `dotslot-mcp --root .` (installed with the Python package) |
+| VS Code / Open VSX | `ao3575911.dotslot` *(release pending; `.vsix` is built by CI)* |
 
 ## Use
 
-An npm build of `scan`/`fill`/`check` lives in [`npm/`](npm/) (`npx dotslot`, once published). A VS Code extension lives in [`vscode/`](vscode/).
-
 ```bash
-dotslot new notes --width 26 --lines 3 --comment '# '   # generate a slot or block
-dotslot scan FILE                                         # list slots, widths, capacity
-dotslot fill FILE --set name=value -i                     # fill in place, width kept
-dotslot check FILE --git-base HEAD [--allow a,b]          # prove only slots changed
-dotslot check FILE --git-base HEAD --ignore-whitespace    # ...ignoring trailing whitespace outside slots
-dotslot repad FILE --base OLD -i                          # restore padding after a hand edit
-dotslot migrate FILE... -i                               # rewrite v0.1 `=` slots in the current syntax
-dotslot fit FILE --targets 80,100,120                     # where will lines wrap?
+dotslot new owner --width 12                  # print a correctly sized slot
+dotslot scan FILE                             # list slots, widths, capacity
+dotslot fill FILE --set owner=Adam -i         # fill in place; width kept
+dotslot check FILE --git-base HEAD            # prove only slots changed (--allow a,b to narrow)
+dotslot check FILE --base OLD --ignore-whitespace
+dotslot repad FILE --base OLD -i              # restore padding an editor dropped
+dotslot migrate FILE -i                       # convert v0.1 `=` slots
+dotslot fit FILE --targets 80,100,120         # where lines will wrap
 ```
 
-Slot forms: `<./______>` (unnamed), `<./owner:____>` (named), `<./status~:____>` (ellipsis on overflow). In Markdown, put slots in backticks. Full grammar: [SPEC.md](SPEC.md).
+Slot forms: `<./______>` unnamed, `<./owner:____>` named, `<./status~:____>` ellipsis on overflow
+(`!` error, `+` grow). In Markdown, keep slots in backticks. Grammar: [SPEC.md](SPEC.md).
+Exit codes: `0` ok, `1` violation, `2` usage or input error.
 
-## Integrations
-
-| tool | files | what it does |
-|---|---|---|
-| MCP server | `dotslot-mcp --root . [--allow a,b]` | `dotslot_scan`, `dotslot_fill`, `dotslot_check` over stdio; schema-validated arguments; `dry_run` diffs; per-call `allow`; fill verifies before writing; paths confined to root |
-| Claude Code | [`integrations/claude-code/`](integrations/claude-code) | `.mcp.json`, a `PostToolUse` hook that exits 2 on a violation, and a skill |
-| Cursor | [`integrations/cursor/.cursor/`](integrations/cursor/.cursor) | `mcp.json` and a fill-only rule |
-| aider | [`integrations/aider/`](integrations/aider) | `lint-cmd: dotslot check --git-base HEAD` with auto-lint |
-| any agent | [`integrations/AGENTS.md`](integrations/AGENTS.md) | snippet to paste into your `AGENTS.md` |
-| pre-commit | [`.pre-commit-hooks.yaml`](.pre-commit-hooks.yaml) | `dotslot-check`, `dotslot-lint` |
-| GitHub Action | [`action.yml`](action.yml) | checks PR files against the base SHA, writes a JSON report to the step summary |
-
-Setup for each agent: [`integrations/README.md`](integrations/README.md).
-
-pre-commit (run dotslot after formatters):
-
-```yaml
-- repo: https://github.com/ao3575911/dotslot
-  rev: v0.3.1
-  hooks:
-    - id: dotslot-check
-    - id: dotslot-lint
-```
-
-GitHub Action:
+## GitHub Action
 
 ```yaml
 - uses: actions/checkout@v5
   with: { fetch-depth: 0 }
-- uses: ao3575911/dotslot@v0.3.1
+- uses: ao3575911/dotslot@v0.8.0
   with: { files: "docs/**/*.md config/*.yaml", allow: "status,owner" }
 ```
 
-Inputs: `files` (required), `allow`, `base` (default: the PR base SHA), `ignore-whitespace`, `report`
-(default `dotslot-report.json`). The step summary lists violations and the JSON report (one array, one entry per
-file). No matched files is a pass; a missing base revision is a failure.
+Inputs: `files` (required), `allow`, `base` (default: PR base SHA), `ignore-whitespace`, `report`
+(default `dotslot-report.json`). Violations and the JSON report go to the step summary. No matched files
+passes; a missing base revision fails.
+
+## pre-commit
+
+Run after formatters.
+
+```yaml
+- repo: https://github.com/ao3575911/dotslot
+  rev: v0.8.0
+  hooks: [{ id: dotslot-check }, { id: dotslot-lint }]
+```
+
+## Agents (MCP)
+
+`dotslot-mcp` serves `dotslot_scan`, `dotslot_fill` and `dotslot_check` over stdio. Arguments are
+schema-validated, `dry_run` returns a diff, `allow` limits which slots may change, writes are atomic and
+confined to `--root`. Ready-made setups: [Claude Code](integrations/claude-code), [Cursor](integrations/cursor/.cursor),
+[aider](integrations/aider), and an [AGENTS.md snippet](integrations/AGENTS.md). See [integrations/README.md](integrations/README.md).
 
 ## Limits
 
-dotslot is a check, not a sandbox. The comment finder is a line heuristic unless you install `dotslot[treesitter]`; formatters such as gofmt can move columns, so run dotslot after them; trailing whitespace counts as a change unless you pass `--ignore-whitespace`. See [CHANGELOG.md](CHANGELOG.md) for open items and [PLAN.md](PLAN.md) for the roadmap.
+dotslot is a check, not a sandbox. Without `dotslot[treesitter]`, comment detection is a line heuristic.
+Formatters such as gofmt can move columns, so run dotslot after them. Trailing whitespace counts as a change
+unless you pass `--ignore-whitespace`. Roadmap: [PLAN.md](PLAN.md).
 
-## Repository layout
+## Development
 
-- `dotslot/`: the package (CLI, MCP server).
-- `slot/`, `bin/slot`: the v0.1 reference, kept only so `experiments/run.sh` reproduces findings (a)–(g). Not installed.
-- `tests/`: 70 tests (12 v0.1, 33 v0.2, 25 v0.3 including the h1–h9 exit gate). Run `pip install -e ".[test]" && pytest -q`.
-- `experiments/`: `run.sh` (a–g) and `run_v02.sh` (v02, h, i), with recorded output in `out/`.
+`pip install -e ".[test]" && pytest -q` runs the Python tests and the shared [conformance](conformance/)
+fixtures; `npm test` in `npm/` and `vscode/` runs the others. `slot/` and `bin/slot` are the v0.1 reference,
+kept for [EXPERIMENTS.md](EXPERIMENTS.md); not installed.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE). Releases are GPG-signed in CI and carry SHA256SUMS and build provenance; see [RELEASING.md](RELEASING.md).
+MIT. Releases are GPG-signed in CI with SHA256SUMS and build provenance; see [RELEASING.md](RELEASING.md)
+and [SECURITY.md](SECURITY.md).
