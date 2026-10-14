@@ -4,6 +4,10 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+### Fixed
+- `fill -i`, `repad -i`, `migrate -i` and the MCP server no longer convert CRLF files to LF; line endings are kept byte-for-byte.
+- `check --git-base <ref>` now fails with exit code 2 on an unknown revision instead of silently passing.
+
 ## [0.8.0] - 2026-10-14
 
 ### Fixed

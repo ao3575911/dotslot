@@ -5,7 +5,7 @@ from .core import scan_text, fill_text, SlotError
 from .verify import verify
 from .width import layout, preview, legacy_ends, display_width
 
-def read(p): return sys.stdin.read() if p == '-' else open(p, encoding='utf-8').read()
+def read(p): return sys.stdin.read() if p == '-' else open(p, encoding='utf-8', newline='').read()
 
 def parse_sets(items):
     out = {}
@@ -44,7 +44,7 @@ def cmd_fill(a):
         except SlotError as e:
             print(f'{p}: error: {e}', file=sys.stderr); rc = 2; continue
         if a.in_place and p != '-':
-            open(p, 'w', encoding='utf-8').write(out)
+            open(p, 'w', encoding='utf-8', newline='').write(out)
         else:
             sys.stdout.write(out)
     return rc
@@ -94,6 +94,8 @@ def cmd_fit(a):
 def base_text(a, p):
     if a.base: return read(a.base)
     if a.git_base:
+        v = subprocess.run(['git', 'rev-parse', '--verify', '--quiet', f'{a.git_base}^{{commit}}'], capture_output=True, text=True)
+        if v.returncode != 0: raise OSError(f'--git-base: unknown revision {a.git_base!r}')
         r = subprocess.run(['git', 'show', f'{a.git_base}:./{p}'], capture_output=True, text=True,
                            cwd=None)
         return r.stdout if r.returncode == 0 else None   # new file: nothing to compare
@@ -125,7 +127,7 @@ def cmd_repad(a):
                 lines[n.line] = ln[:n.start] + '<./' + render(n.header, n.raw_value, b.width, b.pad) + '>' + ln[n.end:]
                 fixed += 1
     out = '\n'.join(lines)
-    if a.in_place: open(a.files[0], 'w', encoding='utf-8').write(out)
+    if a.in_place: open(a.files[0], 'w', encoding='utf-8', newline='').write(out)
     else: sys.stdout.write(out)
     print(f'repadded {fixed} slot(s)', file=sys.stderr); return 0
 
@@ -167,14 +169,14 @@ def cmd_migrate(a):
     from .migrate import migrate_text
     rc = 0
     for path in a.files:
-        old = open(path, encoding='utf-8').read()
+        old = open(path, encoding='utf-8', newline='').read()
         new, changes, problems = migrate_text(old, path, a.mode, ' ' if a.pad == 'space' else '_')
         for ln, col, o, n in changes: print(f'{path}:{ln}:{col+1}: {o} -> {n}', file=sys.stderr)
         for ln, col, o, msg in problems: print(f'{path}:{ln}:{col+1}: error: {o}: {msg}', file=sys.stderr); rc = 2
         if a.check:
             if changes: rc = max(rc, 1)
         elif a.in_place:
-            if new != old: open(path, 'w', encoding='utf-8').write(new)
+            if new != old: open(path, 'w', encoding='utf-8', newline='').write(new)
         else:
             sys.stdout.write(new)
     return rc

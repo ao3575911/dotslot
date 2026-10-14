@@ -55,7 +55,7 @@ def _atomic_write(full, text):
     """Write to a temp file in the same directory, then os.replace, so a crash never leaves a half-written file."""
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(full), prefix='.dotslot-', suffix='.tmp')
     try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as f: f.write(text)
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='') as f: f.write(text)
         try: os.chmod(tmp, os.stat(full).st_mode & 0o7777)
         except OSError: pass
         os.replace(tmp, full)
@@ -76,13 +76,13 @@ class Server:
         if allow is None: return self.allow
         return set(allow) & self.allow if self.allow is not None else set(allow)
     def scan(self, path):
-        slots, issues = scan_text(open(self._path(path), encoding='utf-8').read(), path)
+        slots, issues = scan_text(open(self._path(path), encoding='utf-8', newline='').read(), path)
         return dict(slots=[dict(index=s.index, name=s.name, line=s.line + 1, width=s.width, lines=1 + len(s.conts),
                                 capacity=s.capacity + sum(c.capacity for c in s.conts), policy=s.policy,
                                 value=(s.block_value() if s.conts else s.value)) for s in slots],
                     issues=[f'{sev} line {l+1}: {m}' for sev, l, _, m in issues])
     def fill(self, path, values, overflow='error', dry_run=False, allow=None):
-        full = self._path(path); old = open(full, encoding='utf-8').read()
+        full = self._path(path); old = open(full, encoding='utf-8', newline='').read()
         allow = self._allow(allow)
         new = fill_text(old, values, path, 'auto', overflow or 'error', (), allow)
         r = verify(old, new, path, 'auto', allow)
@@ -91,7 +91,7 @@ class Server:
         if not dry_run and new != old: _atomic_write(full, new)
         return dict(written=not dry_run and new != old, dry_run=bool(dry_run), changed=r['changed'], diff=diff)
     def check(self, path, base_text, allow=None, ignore_whitespace=False):
-        new = open(self._path(path), encoding='utf-8').read()
+        new = open(self._path(path), encoding='utf-8', newline='').read()
         return verify(base_text, new, path, 'auto', self._allow(allow), ignore_whitespace)
 
     def handle(self, msg):
