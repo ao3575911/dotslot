@@ -19,3 +19,4 @@ sha256sum -c SHA256SUMS                                             # files matc
 gh attestation verify dotslot-X.Y.Z-py3-none-any.whl -R ao3575911/dotslot   # built by this repo's release workflow
 gpg --import .github/release-signing-key.asc && git tag -v vX.Y.Z  # tag signature
 ```
+- To release an older commit on main: `gh workflow run release -f ref=<sha>` (must be an ancestor of main).
