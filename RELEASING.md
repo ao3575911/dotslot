@@ -20,3 +20,5 @@ gh attestation verify dotslot-X.Y.Z-py3-none-any.whl -R ao3575911/dotslot   # bu
 gpg --import .github/release-signing-key.asc && git tag -v vX.Y.Z  # tag signature
 ```
 - To release an older commit on main: `gh workflow run release -f ref=<sha>` (must be an ancestor of main).
+- If that commit's workflow files differ from main's, GitHub blocks CI from pushing the tag. The failed log prints `TAG_OBJECT_BASE64=...` (the CI-signed tag). Push it, then re-run the same dispatch; CI reuses the tag after verifying its signature and commit:
+  `echo "$B64" | base64 -d | git mktag > /tmp/t && git update-ref refs/tags/vX.Y.Z $(cat /tmp/t) && git push origin refs/tags/vX.Y.Z`
