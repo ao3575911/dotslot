@@ -38,10 +38,6 @@ jobs:
       - name: Version must match the tag
         run: test "v$(node -p 'require("./package.json").version')" = "${{ inputs.tag }}"
       - run: npm ci && npm test && npx vsce package --no-dependencies -o dotslot.vsix
-      - name: Visual Studio Marketplace
-        continue-on-error: true
-        env: { VSCE_PAT: "${{ secrets.VSCE_PAT }}" }
-        run: npx vsce publish --packagePath dotslot.vsix
       - name: Open VSX
         env: { OVSX_PAT: "${{ secrets.OVSX_PAT }}" }
         run: |
