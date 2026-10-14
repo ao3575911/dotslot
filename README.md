@@ -2,6 +2,8 @@
 
 # dotslot
 
+![dotslot demo: scan a file's slots, fill them, check passes, then check fails with exit 1 when an agent overflows a slot](docs/demo.gif)
+
 Let agents fill the blanks in a file, and prove they touched nothing else.
 
 [![ci](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml/badge.svg)](https://github.com/ao3575911/dotslot/actions/workflows/ci.yml)
