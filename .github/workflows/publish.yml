@@ -44,4 +44,6 @@ jobs:
         run: npx vsce publish --packagePath dotslot.vsix
       - name: Open VSX
         env: { OVSX_PAT: "${{ secrets.OVSX_PAT }}" }
-        run: npx --yes ovsx@0.10 publish dotslot.vsix
+        run: |
+          npx --yes ovsx@0.10 create-namespace ao3575911 || true
+          npx --yes ovsx@0.10 publish dotslot.vsix
