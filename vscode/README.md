@@ -1,6 +1,6 @@
 # dotslot for VS Code
 
-Works with [dotslot](https://github.com/ao3575911/dotslot) fixed-width `<./____>` slots.
+Works with [dotslot](https://github.com/ao3575911/dotslot) fixed-width slots.
 
 - **Highlighting:** empty and filled slots are highlighted.
 - **Width hints:** each slot shows `used/capacity` cells (and block height) as an inlay hint.

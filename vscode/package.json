@@ -16,19 +16,14 @@
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Linters",
-    "Other"
+    "Linters"
   ],
   "keywords": [
     "dotslot",
     "templates",
     "fixed-width",
     "placeholders",
-    "slots",
-    "ai-agents",
-    "coding-agents",
-    "lint",
-    "mcp"
+    "lint"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
