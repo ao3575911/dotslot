@@ -11,7 +11,7 @@ Interior (between `<./` and `>`), width W = its display cells in the file:
 Escapes inside a value: \\  \<  \>  \_  \:  \|   (the tool writes them for you)
 """
 from __future__ import annotations
-import os, re
+import os, re, tempfile
 from dataclasses import dataclass, field
 from .width import cells, cut, display_width
 from .treesitter import comment_ranges
@@ -36,6 +36,19 @@ CLOSERS = ('-->', '*/')
 
 class SlotError(Exception):
     pass
+
+def atomic_write(full, text):
+    """Write to a temp file in the same directory, then os.replace, so a crash never leaves a half-written file."""
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(full), prefix='.dotslot-', suffix='.tmp')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='') as f: f.write(text)
+        try: os.chmod(tmp, os.stat(full).st_mode & 0o7777)
+        except OSError: pass
+        os.replace(tmp, full)
+    except BaseException:
+        try: os.unlink(tmp)
+        except OSError: pass
+        raise
 
 def unescape(s): return re.sub(r'\\(.)', r'\1', s)
 

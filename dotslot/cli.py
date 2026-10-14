@@ -1,11 +1,33 @@
 """dotslot scan | fill | check | fit"""
 from __future__ import annotations
-import argparse, json, subprocess, sys
-from .core import scan_text, fill_text, SlotError
+import argparse, json, os, subprocess, sys
+from .core import scan_text, fill_text, SlotError, atomic_write
 from .verify import verify
 from .width import layout, preview, legacy_ends, display_width
 
 def read(p): return sys.stdin.read() if p == '-' else open(p, encoding='utf-8', newline='').read()
+
+def write(p, text):
+    """In-place write: atomic, and through a symlink to its target rather than replacing the link."""
+    atomic_write(os.path.realpath(p), text)
+
+def load_values(path):
+    with open(path, encoding='utf-8') as f: vals = json.load(f)
+    if not isinstance(vals, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in vals.items()):
+        raise SystemExit(f'--json-values: {path} must hold a JSON object of string values')
+    return vals
+
+def int_list(s, opt):
+    try: out = sorted(int(t) for t in s.split(','))
+    except ValueError: raise SystemExit(f'{opt} needs a comma list of integers, got {s!r}')
+    if not out or out[0] < 1: raise SystemExit(f'{opt} values must be positive')
+    return out
+
+def positive(s):
+    try: n = int(s)
+    except ValueError: raise argparse.ArgumentTypeError(f'invalid int value: {s!r}')
+    if n < 1: raise argparse.ArgumentTypeError(f'must be at least 1, got {n}')
+    return n
 
 def parse_sets(items):
     out = {}
@@ -35,16 +57,17 @@ def cmd_scan(a):
 
 def cmd_fill(a):
     vals = parse_sets(a.set)
-    if a.json_values: vals.update(json.load(open(a.json_values)))
+    if a.json_values: vals.update(load_values(a.json_values))
     rc = 0
     allow = set(a.allow.split(',')) if a.allow else None
     for p in a.files:
         try:
-            out = fill_text(read(p), vals, p, a.mode, a.overflow, tuple(a.clear or ()), allow, a.allow_unsafe_chars)
+            text = read(p)
+            out = fill_text(text, vals, p, a.mode, a.overflow, tuple(a.clear or ()), allow, a.allow_unsafe_chars)
         except SlotError as e:
             print(f'{p}: error: {e}', file=sys.stderr); rc = 2; continue
         if a.in_place and p != '-':
-            open(p, 'w', encoding='utf-8', newline='').write(out)
+            if out != text: write(p, out)
         else:
             sys.stdout.write(out)
     return rc
@@ -79,7 +102,7 @@ def fit_report(text, path, mode, targets, tab, show_preview):
     return out, bad
 
 def cmd_fit(a):
-    targets = sorted(int(t) for t in a.targets.split(','))
+    targets = int_list(a.targets, '--targets')
     rc = 0
     for p in a.files:
         text = read(p)
@@ -99,16 +122,21 @@ def cmd_fit(a):
 def base_text(a, p):
     if a.base: return read(a.base)
     if a.git_base:
-        v = subprocess.run(['git', 'rev-parse', '--verify', '--quiet', f'{a.git_base}^{{commit}}'], capture_output=True, text=True)
+        # a leading '-' would be parsed by git as an option (e.g. --output=FILE), never as a revision
+        if a.git_base.startswith('-') or '\0' in a.git_base or '\0' in p:
+            raise OSError(f'--git-base: unknown revision {a.git_base!r}')
+        v = subprocess.run(['git', 'rev-parse', '--verify', '--quiet', f'{a.git_base}^{{commit}}'], capture_output=True)
         if v.returncode != 0: raise OSError(f'--git-base: unknown revision {a.git_base!r}')
-        r = subprocess.run(['git', 'show', f'{a.git_base}:./{p}'], capture_output=True, text=True,
-                           cwd=None)
-        return r.stdout if r.returncode == 0 else None   # new file: nothing to compare
+        r = subprocess.run(['git', 'show', f'{a.git_base}:./{p}'], capture_output=True)
+        # decode bytes ourselves: text=True would use the locale and turn CRLF into LF
+        return r.stdout.decode('utf-8') if r.returncode == 0 else None   # new file: nothing to compare
     return None
 
 def cmd_new(a):
     pol = a.policy or ''
     head = f'{a.name}{pol}:' if a.name else (f'{pol}:' if pol else '')
+    if len(a.pad) != 1 or a.pad not in '_ ': raise SystemExit("--pad must be '_' or ' '")
+    if any(c in a.comment for c in '\r\n'): raise SystemExit('--comment must be a single-line prefix')
     if a.width < len(head) + 1: raise SystemExit(f'width {a.width} leaves no room after {head!r}')
     pre, post = a.comment, (' ' + CLOSE[a.comment.strip()] if a.comment.strip() in CLOSE else '')
     lines = [pre + '<./' + head + a.pad * (a.width - len(head)) + '>' + post]
@@ -132,7 +160,7 @@ def cmd_repad(a):
                 lines[n.line] = ln[:n.start] + '<./' + render(n.header, n.raw_value, b.width, b.pad) + '>' + ln[n.end:]
                 fixed += 1
     out = '\n'.join(lines)
-    if a.in_place: open(a.files[0], 'w', encoding='utf-8', newline='').write(out)
+    if a.in_place: write(a.files[0], out)
     else: sys.stdout.write(out)
     print(f'repadded {fixed} slot(s)', file=sys.stderr); return 0
 
@@ -174,14 +202,14 @@ def cmd_migrate(a):
     from .migrate import migrate_text
     rc = 0
     for path in a.files:
-        old = open(path, encoding='utf-8', newline='').read()
+        old = read(path)
         new, changes, problems = migrate_text(old, path, a.mode, ' ' if a.pad == 'space' else '_')
         for ln, col, o, n in changes: print(f'{path}:{ln}:{col+1}: {o} -> {n}', file=sys.stderr)
         for ln, col, o, msg in problems: print(f'{path}:{ln}:{col+1}: error: {o}: {msg}', file=sys.stderr); rc = 2
         if a.check:
             if changes: rc = max(rc, 1)
         elif a.in_place:
-            if new != old: open(path, 'w', encoding='utf-8', newline='').write(new)
+            if new != old: write(path, new)
         else:
             sys.stdout.write(new)
     return rc
@@ -208,11 +236,11 @@ def main(argv=None):
             f.add_argument('--json-values'); f.add_argument('-i', '--in-place', action='store_true')
             f.add_argument('--clear', action='append', help='empty a slot again (name or @N)')
         else:
-            f.add_argument('--targets', default='80,100,120'); f.add_argument('--tab', type=int, default=8)
-            f.add_argument('--preview', action='store_true'); f.add_argument('--fail-at', type=int, help='exit 1 if any line is wider than N cells')
+            f.add_argument('--targets', default='80,100,120'); f.add_argument('--tab', type=positive, default=8)
+            f.add_argument('--preview', action='store_true'); f.add_argument('--fail-at', type=positive, help='exit 1 if any line is wider than N cells')
     n = sub.add_parser('new', help='print a correctly sized slot or block')
-    n.add_argument('name', nargs='?'); n.add_argument('--width', type=int, required=True)
-    n.add_argument('--lines', type=int, default=1); n.add_argument('--policy', choices=['!', '~', '+'])
+    n.add_argument('name', nargs='?'); n.add_argument('--width', type=positive, required=True)
+    n.add_argument('--lines', type=positive, default=1); n.add_argument('--policy', choices=['!', '~', '+'])
     n.add_argument('--comment', default='', help="prefix such as '# ' or '<!-- '"); n.add_argument('--pad', default='_')
     n.add_argument('--md', action='store_true', help='wrap in backticks (Markdown code span)')
     n.set_defaults(indent_only=False)
@@ -222,7 +250,7 @@ def main(argv=None):
     c = sub.add_parser('check', help='lint slots; with --base/--git-base, prove only slots changed'); common(c)
     c.add_argument('--require', help='comma list of names that must be filled')
     c.add_argument('--require-filled', action='store_true'); c.add_argument('--strict', action='store_true')
-    c.add_argument('--fit', type=int, help='also fail lines wider than N cells'); c.add_argument('--tab', type=int, default=8)
+    c.add_argument('--fit', type=positive, help='also fail lines wider than N cells'); c.add_argument('--tab', type=positive, default=8)
     c.add_argument('--base', help='fill-safe check: compare against this earlier version of the file')
     c.add_argument('--git-base', help='fill-safe check against a git revision (e.g. HEAD, origin/main)')
     c.add_argument('--allow', help='with --base: only these slots may change')
@@ -238,7 +266,7 @@ def main(argv=None):
         return dict(scan=cmd_scan, fill=cmd_fill, check=cmd_check, fit=cmd_fit, new=cmd_new, repad=cmd_repad, migrate=cmd_migrate)[a.cmd](a)
     except BrokenPipeError:   # e.g. `dotslot scan … | head`
         import os; os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno()); return 1
-    except (OSError, UnicodeDecodeError) as e:
+    except (OSError, UnicodeDecodeError, ValueError) as e:
         print(f'dotslot: error: {e}', file=sys.stderr); return 2
     except KeyboardInterrupt:
         return 130

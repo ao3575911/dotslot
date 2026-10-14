@@ -4,6 +4,25 @@ All notable changes are listed here. Versions follow [SemVer](https://semver.org
 
 ## [Unreleased]
 
+### Security
+- Claude Code hook: absolute `file_path` values (what Claude Code sends) skipped the check entirely. Paths are now
+  resolved relative to the work tree root; files outside the repository are ignored.
+- MCP server: an embedded NUL in `path`, deeply nested JSON or any unexpected exception no longer kills the server.
+  Paths inside `.git/`, non-regular files and files over 16 MiB are refused.
+- `check --git-base` (Python, npm) rejects revisions starting with `-`, so they cannot be read as git options.
+- GitHub Action passes files after `--`, so a file named `-…` cannot be read as an option.
+- Workflows: least-privilege job permissions in `release`, `persist-credentials: false` where no push is needed,
+  workflow inputs passed through `env` instead of being expanded into scripts.
+
+### Fixed
+- `check --git-base` (Python) no longer reports CRLF files as NOT fill-safe: the base is decoded as UTF-8 bytes
+  instead of in text mode, which turned CRLF into LF.
+- `fill -i`, `repad -i`, `migrate -i` (Python) and `fill -i` (npm) write atomically and through symlinks to their target.
+- Clean errors instead of tracebacks for a malformed `--json-values` file (must be an object of strings),
+  non-integer `fit --targets`, and non-positive `--width`, `--lines`, `--tab`, `--fit`, `--fail-at`;
+  `new --pad` must be `_` or a space.
+- npm CLI accepts `--` to end options.
+
 ## [0.8.1] - 2026-10-14
 
 ### Security

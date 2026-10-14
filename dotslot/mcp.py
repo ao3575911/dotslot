@@ -3,8 +3,8 @@ Run:  python -m dotslot.mcp --root /path/to/repo [--allow owner,status]
 The only write path is `dotslot_fill`, which changes slot interiors and re-verifies the result.
 Every tool call is validated against the tool's input schema before it runs."""
 from __future__ import annotations
-import argparse, tempfile, difflib, json, os, sys
-from .core import scan_text, fill_text, SlotError
+import argparse, difflib, json, os, sys
+from .core import scan_text, fill_text, SlotError, atomic_write as _atomic_write
 from .verify import verify
 from . import __version__
 
@@ -50,39 +50,38 @@ def validate(schema, value, where='arguments'):
         for i, v in enumerate(value): validate(schema['items'], v, f'{where}[{i}]')
 
 PROTOCOL_VERSIONS = ('2025-06-18', '2025-03-26', '2024-11-05')   # newest first
-
-def _atomic_write(full, text):
-    """Write to a temp file in the same directory, then os.replace, so a crash never leaves a half-written file."""
-    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(full), prefix='.dotslot-', suffix='.tmp')
-    try:
-        with os.fdopen(fd, 'w', encoding='utf-8', newline='') as f: f.write(text)
-        try: os.chmod(tmp, os.stat(full).st_mode & 0o7777)
-        except OSError: pass
-        os.replace(tmp, full)
-    except BaseException:
-        try: os.unlink(tmp)
-        except OSError: pass
-        raise
+MAX_BYTES = 16 * 1024 * 1024   # refuse to load larger files (memory/CPU bound for an agent-driven server)
 
 class Server:
     def __init__(self, root, allow=None):
         self.root = os.path.realpath(root)
         self.allow = set(allow) if allow else None
     def _path(self, p):
-        full = os.path.realpath(os.path.join(self.root, p))
-        if os.path.commonpath([full, self.root]) != self.root: raise SlotError(f'{p}: outside the server root')
+        if not p or '\0' in p: raise SlotError(f'{p!r}: invalid path')
+        try:
+            full = os.path.realpath(os.path.join(self.root, p))
+            inside = os.path.commonpath([full, self.root]) == self.root
+        except ValueError:   # e.g. a different drive on Windows
+            inside = False
+        if not inside: raise SlotError(f'{p}: outside the server root')
+        if '.git' in os.path.relpath(full, self.root).split(os.sep):
+            raise SlotError(f'{p}: inside a .git directory')
+        if not os.path.isfile(full): raise SlotError(f'{p}: not a regular file')
+        if os.path.getsize(full) > MAX_BYTES: raise SlotError(f'{p}: larger than {MAX_BYTES} bytes')
         return full
+    def _read(self, p):
+        with open(self._path(p), encoding='utf-8', newline='') as f: return f.read()
     def _allow(self, allow):
         if allow is None: return self.allow
         return set(allow) & self.allow if self.allow is not None else set(allow)
     def scan(self, path):
-        slots, issues = scan_text(open(self._path(path), encoding='utf-8', newline='').read(), path)
+        slots, issues = scan_text(self._read(path), path)
         return dict(slots=[dict(index=s.index, name=s.name, line=s.line + 1, width=s.width, lines=1 + len(s.conts),
                                 capacity=s.capacity + sum(c.capacity for c in s.conts), policy=s.policy,
                                 value=(s.block_value() if s.conts else s.value)) for s in slots],
                     issues=[f'{sev} line {l+1}: {m}' for sev, l, _, m in issues])
     def fill(self, path, values, overflow='error', dry_run=False, allow=None):
-        full = self._path(path); old = open(full, encoding='utf-8', newline='').read()
+        full = self._path(path); old = self._read(path)
         allow = self._allow(allow)
         new = fill_text(old, values, path, 'auto', overflow or 'error', (), allow)
         r = verify(old, new, path, 'auto', allow)
@@ -91,7 +90,7 @@ class Server:
         if not dry_run and new != old: _atomic_write(full, new)
         return dict(written=not dry_run and new != old, dry_run=bool(dry_run), changed=r['changed'], diff=diff)
     def check(self, path, base_text, allow=None, ignore_whitespace=False):
-        new = open(self._path(path), encoding='utf-8', newline='').read()
+        new = self._read(path)
         return verify(base_text, new, path, 'auto', self._allow(allow), ignore_whitespace)
 
     def handle(self, msg):
@@ -121,6 +120,8 @@ class Server:
                 out, err = fn(**args), False
             except (SlotError, OSError, UnicodeDecodeError) as e:
                 out, err = dict(error=str(e)), True
+            except Exception as e:   # never let one bad call take the server down
+                out, err = dict(error=f'internal error: {type(e).__name__}'), True
             res = dict(content=[dict(type='text', text=json.dumps(out, ensure_ascii=False))], isError=err)
         elif mid is None: return None            # notification
         elif m == 'ping': res = {}
@@ -136,9 +137,13 @@ def main(argv=None):
         for line in sys.stdin:
             if not line.strip(): continue
             try: msg = json.loads(line)
-            except json.JSONDecodeError:
+            except (ValueError, RecursionError):
                 out = dict(jsonrpc='2.0', id=None, error=dict(code=-32700, message='parse error'))
-            else: out = srv.handle(msg)
+            else:
+                try: out = srv.handle(msg)
+                except Exception:
+                    out = dict(jsonrpc='2.0', id=msg.get('id') if isinstance(msg, dict) else None,
+                               error=dict(code=-32603, message='internal error'))
             if out is not None: sys.stdout.write(json.dumps(out, ensure_ascii=False) + '\n'); sys.stdout.flush()
     except (KeyboardInterrupt, BrokenPipeError):   # client went away: exit quietly
         pass

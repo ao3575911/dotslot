@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // dotslot CLI (npm): scan, fill, check. Same flags and exit codes as the Python CLI for these commands.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, unlinkSync, statSync, chmodSync, realpathSync } from 'node:fs';
+import { dirname, join, basename } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { scanText, fillText, SlotError, Mode } from './core.js';
 import { verify, Result } from './verify.js';
@@ -17,6 +18,7 @@ function parse(argv: string[]): Args {
   const [cmd, ...rest] = argv; const files: string[] = [], opts: Record<string, string[]> = {}, flags = new Set<string>();
   for (let i = 0; i < rest.length; i++) {
     let a = rest[i]; let val: string | undefined;
+    if (a === '--') { files.push(...rest.slice(i + 1)); break; }
     if (a.startsWith('--') && a.includes('=')) { val = a.slice(a.indexOf('=') + 1); a = a.slice(0, a.indexOf('=')); }
     if (VALUED.has(a)) { if (val === undefined) val = rest[++i]; if (val === undefined) die(`${a} needs a value`); (opts[a] ??= []).push(val!); }
     else if (a.startsWith('-') && a !== '-') flags.add(a === '-i' ? '--in-place' : a);
@@ -26,6 +28,22 @@ function parse(argv: string[]): Args {
 }
 function die(m: string): never { process.stderr.write(`dotslot: ${m}\n`); process.exit(2); }
 const read = (p: string) => readFileSync(p === '-' ? 0 : p, 'utf8');
+/** In-place write: temp file in the same directory, then rename (through a symlink to its target). */
+function writeAtomic(p: string, text: string) {
+  const full = realpathSync(p), tmp = join(dirname(full), `.dotslot-${process.pid}-${Date.now()}-${basename(full)}.tmp`);
+  try {
+    writeFileSync(tmp, text, { flag: 'wx' });
+    try { chmodSync(tmp, statSync(full).mode & 0o7777); } catch { /* best effort */ }
+    renameSync(tmp, full);
+  } catch (e) { try { unlinkSync(tmp); } catch { /* already gone */ } throw e; }
+}
+function loadValues(p: string): Record<string, string> {
+  let v: unknown;
+  try { v = JSON.parse(read(p)); } catch (e) { if ((e as NodeJS.ErrnoException).code) throw e; die(`--json-values: ${p} is not valid JSON`); }
+  if (!v || typeof v !== 'object' || Array.isArray(v) || !Object.values(v).every((x) => typeof x === 'string'))
+    die(`--json-values: ${p} must hold a JSON object of string values`);
+  return v as Record<string, string>;
+}
 const one = (a: Args, k: string) => a.opts[k]?.[a.opts[k].length - 1];
 const allowOf = (a: Args) => (one(a, '--allow') ? new Set(one(a, '--allow')!.split(',')) : null);
 
@@ -59,13 +77,14 @@ function scan(a: Args, mode: Mode): number {
 function fill(a: Args, mode: Mode): number {
   const vals: Record<string, string> = {};
   for (const it of a.opts['--set'] ?? []) { const k = it.indexOf('='); if (k < 0) die(`--set needs name=value, got '${it}'`); vals[it.slice(0, k)] = it.slice(k + 1); }
-  if (one(a, '--json-values')) Object.assign(vals, JSON.parse(read(one(a, '--json-values')!)));
+  if (one(a, '--json-values')) Object.assign(vals, loadValues(one(a, '--json-values')!));
   let rc = 0;
   for (const p of a.files) {
     let out: string;
-    try { out = fillText(read(p), vals, p, mode, one(a, '--overflow') ?? 'error', a.opts['--clear'] ?? [], allowOf(a), a.flags.has('--allow-unsafe-chars')); }
+    const text = read(p);
+    try { out = fillText(text, vals, p, mode, one(a, '--overflow') ?? 'error', a.opts['--clear'] ?? [], allowOf(a), a.flags.has('--allow-unsafe-chars')); }
     catch (e) { if (!(e instanceof SlotError)) throw e; process.stderr.write(`${p}: error: ${e.message}\n`); rc = 2; continue; }
-    if (a.flags.has('--in-place') && p !== '-') writeFileSync(p, out); else process.stdout.write(out);
+    if (a.flags.has('--in-place') && p !== '-') { if (out !== text) writeAtomic(p, out); } else process.stdout.write(out);
   }
   return rc;
 }
@@ -73,6 +92,8 @@ function baseText(a: Args, p: string): string | null {
   if (one(a, '--base')) return read(one(a, '--base')!);
   const rev = one(a, '--git-base');
   if (rev) {
+    // a leading '-' would be parsed by git as an option (e.g. --output=FILE), never as a revision
+    if (rev.startsWith('-') || rev.includes('\0') || p.includes('\0')) die(`error: --git-base: unknown revision '${rev}'`);
     try { execFileSync('git', ['rev-parse', '--verify', '--quiet', `${rev}^{commit}`], { stdio: 'ignore' }); }
     catch { die(`error: --git-base: unknown revision '${rev}'`); }
     try { return execFileSync('git', ['show', `${rev}:./${p}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; } }
