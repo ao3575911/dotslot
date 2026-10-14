@@ -53,8 +53,8 @@ jobs:
           fpr=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
           git -c user.name=ao3575911 -c user.email=280728713+ao3575911@users.noreply.github.com \
               -c user.signingkey="$fpr" tag -s "$TAG" -m "$TAG"
-          rm -rf "$GNUPGHOME"
           gpg --batch --quiet --import .github/release-signing-key.asc; git tag -v "$TAG"
+          rm -rf "$GNUPGHOME"; unset GNUPGHOME
           if ! git push origin "refs/tags/$TAG"; then
             # GITHUB_TOKEN cannot push a ref whose workflow files differ from main's.
             echo "TAG_OBJECT_BASE64=$(git cat-file tag "$TAG" | base64 -w0)"
